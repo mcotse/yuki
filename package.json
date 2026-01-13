@@ -1,0 +1,18 @@
+{
+  "name": "yuki-meds",
+  "version": "1.0.0",
+  "description": "Medication reminder system for Yuki",
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js",
+    "test-sms": "node src/test-sms.js",
+    "check-schedule": "node src/check-schedule.js"
+  },
+  "dependencies": {
+    "@vercel/kv": "^3.0.0",
+    "date-fns": "^3.0.0",
+    "date-fns-tz": "^3.0.0",
+    "dotenv": "^16.0.0",
+    "twilio": "^5.0.0"
+  }
+}

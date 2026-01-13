@@ -1,0 +1,6 @@
+.beads
+.git
+.env
+.env.local
+node_modules
+src/test-*.js
