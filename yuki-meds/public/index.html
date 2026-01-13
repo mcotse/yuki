@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yuki Meds Dashboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .card h2 {
+      color: #333;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .day-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .day-btn {
+      padding: 8px 16px;
+      border: 2px solid #667eea;
+      background: white;
+      color: #667eea;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .day-btn:hover, .day-btn.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .slot {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 12px;
+    }
+
+    .slot-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .slot-time {
+      background: #667eea;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    .med-list {
+      list-style: none;
+    }
+
+    .med-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: white;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border-left: 4px solid #667eea;
+    }
+
+    .med-item.left-eye {
+      border-left-color: #3498db;
+    }
+
+    .med-item.right-eye {
+      border-left-color: #e74c3c;
+    }
+
+    .med-item.oral {
+      border-left-color: #2ecc71;
+    }
+
+    .med-icon {
+      font-size: 1.5rem;
+    }
+
+    .med-details {
+      flex: 1;
+    }
+
+    .med-name {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .med-dose {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .med-notes {
+      color: #888;
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    .pending-list {
+      list-style: none;
+    }
+
+    .pending-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #fff3cd;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border-left: 4px solid #ffc107;
+    }
+
+    .pending-info {
+      flex: 1;
+    }
+
+    .pending-name {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .pending-meta {
+      color: #666;
+      font-size: 0.85rem;
+    }
+
+    .confirm-btn {
+      padding: 8px 16px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .confirm-btn:hover {
+      background: #218838;
+    }
+
+    .confirm-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .empty-state .icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #e8f5e9;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .status-bar.has-pending {
+      background: #fff3cd;
+    }
+
+    .refresh-btn {
+      padding: 6px 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.8rem;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .day-selector {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🐕 Yuki Meds</h1>
+      <p>Post-surgery medication tracker</p>
+    </header>
+
+    <div class="card">
+      <h2>⏰ Pending Reminders</h2>
+      <div id="pending-status" class="status-bar">
+        <span>Loading...</span>
+        <button class="refresh-btn" onclick="loadPending()">Refresh</button>
+      </div>
+      <ul id="pending-list" class="pending-list">
+        <li class="loading">Loading...</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>📅 Medication Schedule</h2>
+      <div class="day-selector" id="day-selector">
+        <button class="day-btn" onclick="loadSchedule(1)">Day 1</button>
+        <button class="day-btn" onclick="loadSchedule(2)">Day 2</button>
+        <button class="day-btn" onclick="loadSchedule(3)">Day 3</button>
+        <button class="day-btn active" onclick="loadSchedule()">Today</button>
+      </div>
+      <div id="schedule-content">
+        <div class="loading">Loading schedule...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '';
+
+    async function loadPending() {
+      try {
+        const res = await fetch(`${API_BASE}/api/pending`);
+        const data = await res.json();
+
+        const statusBar = document.getElementById('pending-status');
+        const list = document.getElementById('pending-list');
+
+        if (data.count === 0) {
+          statusBar.className = 'status-bar';
+          statusBar.innerHTML = `
+            <span>✅ All medications confirmed!</span>
+            <button class="refresh-btn" onclick="loadPending()">Refresh</button>
+          `;
+          list.innerHTML = `
+            <li class="empty-state">
+              <div class="icon">🎉</div>
+              <div>No pending medications</div>
+            </li>
+          `;
+        } else {
+          statusBar.className = 'status-bar has-pending';
+          statusBar.innerHTML = `
+            <span>⏳ ${data.count} medication(s) pending confirmation</span>
+            <button class="refresh-btn" onclick="loadPending()">Refresh</button>
+          `;
+
+          list.innerHTML = data.reminders.map(r => `
+            <li class="pending-item">
+              <div class="pending-info">
+                <div class="pending-name">${r.medication}</div>
+                <div class="pending-meta">${r.location} • ${r.dose} • ${r.scheduledTime}</div>
+                ${r.ageMinutes !== null ? `<div class="pending-meta">Sent ${r.ageMinutes}m ago</div>` : ''}
+              </div>
+              <button class="confirm-btn" onclick="confirmMed()">Confirm</button>
+            </li>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Error loading pending:', err);
+        document.getElementById('pending-list').innerHTML = `
+          <li class="empty-state">
+            <div class="icon">⚠️</div>
+            <div>Error loading pending reminders</div>
+          </li>
+        `;
+      }
+    }
+
+    async function confirmMed() {
+      try {
+        const res = await fetch(`${API_BASE}/api/pending`, { method: 'POST' });
+        const data = await res.json();
+
+        if (data.confirmed) {
+          alert(`✅ Confirmed: ${data.medication}\n${data.remaining} remaining`);
+          loadPending();
+        }
+      } catch (err) {
+        console.error('Error confirming:', err);
+        alert('Error confirming medication');
+      }
+    }
+
+    async function loadSchedule(day = null) {
+      // Update button states
+      document.querySelectorAll('.day-btn').forEach((btn, i) => {
+        btn.classList.remove('active');
+        if (day === null && i === 3) btn.classList.add('active');
+        else if (day === i + 1) btn.classList.add('active');
+      });
+
+      try {
+        const url = day ? `${API_BASE}/api/schedule?day=${day}` : `${API_BASE}/api/schedule`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const content = document.getElementById('schedule-content');
+        const slotEmojis = {
+          MORNING: '🌅',
+          MIDDAY: '☀️',
+          EVENING: '🌆',
+          NIGHT: '🌙'
+        };
+
+        const slotNames = {
+          MORNING: 'Morning',
+          MIDDAY: 'Midday',
+          EVENING: 'Evening',
+          NIGHT: 'Night'
+        };
+
+        let html = `<p style="margin-bottom: 16px; color: #666;">Day ${data.dayNumber} - ${data.date}</p>`;
+
+        for (const [slot, info] of Object.entries(data.schedule)) {
+          html += `
+            <div class="slot">
+              <div class="slot-header">
+                <span>${slotEmojis[slot]} ${slotNames[slot]}</span>
+                <span class="slot-time">${info.time}</span>
+              </div>
+              <ul class="med-list">
+          `;
+
+          if (info.medications.length === 0) {
+            html += `<li class="med-item"><em style="color: #999;">No medications scheduled</em></li>`;
+          } else {
+            for (const med of info.medications) {
+              const locClass = med.location.includes('LEFT') ? 'left-eye' :
+                              med.location.includes('RIGHT') ? 'right-eye' : 'oral';
+              const locIcon = med.location.includes('eye') ? '👁️' : '💊';
+
+              html += `
+                <li class="med-item ${locClass}">
+                  <span class="med-icon">${locIcon}</span>
+                  <div class="med-details">
+                    <div class="med-name">${med.name}</div>
+                    <div class="med-dose">${med.location} • ${med.dose}</div>
+                    ${med.notes ? `<div class="med-notes">${med.notes}</div>` : ''}
+                  </div>
+                </li>
+              `;
+            }
+          }
+
+          html += `</ul></div>`;
+        }
+
+        content.innerHTML = html;
+      } catch (err) {
+        console.error('Error loading schedule:', err);
+        document.getElementById('schedule-content').innerHTML = `
+          <div class="empty-state">
+            <div class="icon">⚠️</div>
+            <div>Error loading schedule</div>
+          </div>
+        `;
+      }
+    }
+
+    // Load on page load
+    loadPending();
+    loadSchedule();
+
+    // Auto-refresh pending every 30 seconds
+    setInterval(loadPending, 30000);
+  </script>
+</body>
+</html>
