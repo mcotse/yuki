@@ -9,6 +9,7 @@
     "check-schedule": "node src/check-schedule.js"
   },
   "dependencies": {
+    "@upstash/redis": "^1.36.1",
     "@vercel/kv": "^3.0.0",
     "date-fns": "^3.0.0",
     "date-fns-tz": "^3.0.0",

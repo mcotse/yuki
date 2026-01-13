@@ -1,13 +1,25 @@
 // Storage for pending medication reminders
-// Uses Vercel KV in production, in-memory for local dev
+// Uses Upstash Redis in production, in-memory for local dev
 
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 
 const PENDING_KEY = 'yuki:pending';
 const CONFIRMED_PREFIX = 'yuki:confirmed:';
 
-// Check if we're in Vercel environment
-const isVercel = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
+// Check if we're in production with Upstash credentials
+const hasUpstash = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
+
+let redis = null;
+
+function getRedis() {
+  if (!redis && hasUpstash) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+  }
+  return redis;
+}
 
 // In-memory fallback for local dev
 let memoryStore = {
@@ -17,8 +29,9 @@ let memoryStore = {
 
 // Get all pending reminders
 export async function getPendingReminders() {
-  if (isVercel) {
-    const pending = await kv.get(PENDING_KEY);
+  const client = getRedis();
+  if (client) {
+    const pending = await client.get(PENDING_KEY);
     return pending || [];
   }
   return memoryStore.pending;
@@ -26,10 +39,11 @@ export async function getPendingReminders() {
 
 // Add reminders to pending list
 export async function addPendingReminders(reminders) {
-  if (isVercel) {
+  const client = getRedis();
+  if (client) {
     const existing = await getPendingReminders();
     const updated = [...existing, ...reminders];
-    await kv.set(PENDING_KEY, updated, { ex: 86400 }); // 24h expiry
+    await client.set(PENDING_KEY, updated, { ex: 86400 }); // 24h expiry
     return updated;
   }
   memoryStore.pending = [...memoryStore.pending, ...reminders];
@@ -39,16 +53,17 @@ export async function addPendingReminders(reminders) {
 // Mark a medication as confirmed
 export async function confirmMedication(medicationId, slot) {
   const key = `${slot}-${medicationId}`;
+  const client = getRedis();
 
-  if (isVercel) {
+  if (client) {
     // Remove from pending
     const pending = await getPendingReminders();
     const updated = pending.filter(r => !(r.medicationId === medicationId && r.slot === slot));
-    await kv.set(PENDING_KEY, updated, { ex: 86400 });
+    await client.set(PENDING_KEY, updated, { ex: 86400 });
 
     // Mark as confirmed for today
     const today = new Date().toISOString().split('T')[0];
-    await kv.set(`${CONFIRMED_PREFIX}${today}:${key}`, true, { ex: 86400 });
+    await client.set(`${CONFIRMED_PREFIX}${today}:${key}`, true, { ex: 86400 });
 
     return { confirmed: true, remaining: updated.length };
   }
@@ -93,8 +108,9 @@ export async function getRemindersToResend(minutesThreshold = 30) {
 
 // Clear all pending (for testing/reset)
 export async function clearPending() {
-  if (isVercel) {
-    await kv.del(PENDING_KEY);
+  const client = getRedis();
+  if (client) {
+    await client.del(PENDING_KEY);
   }
   memoryStore.pending = [];
   memoryStore.confirmed.clear();
@@ -112,8 +128,9 @@ export async function markRemindersSent(reminderIds) {
     return r;
   });
 
-  if (isVercel) {
-    await kv.set(PENDING_KEY, updated, { ex: 86400 });
+  const client = getRedis();
+  if (client) {
+    await client.set(PENDING_KEY, updated, { ex: 86400 });
   } else {
     memoryStore.pending = updated;
   }
