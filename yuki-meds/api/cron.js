@@ -67,6 +67,21 @@ export default async function handler(req, res) {
     });
   }
 
+  // Check if we already sent reminders for this slot
+  const existingPending = await getPendingReminders();
+  const alreadySentForSlot = existingPending.filter(r => r.slot === slot);
+
+  if (alreadySentForSlot.length > 0) {
+    console.log(`[Cron] Already sent ${alreadySentForSlot.length} reminders for ${slot}, skipping`);
+    return res.status(200).json({
+      triggered: true,
+      slot,
+      sent: false,
+      reason: `Already sent reminders for ${slot}`,
+      existingCount: alreadySentForSlot.length
+    });
+  }
+
   // Get individual reminders for this slot
   const { reminders, dayNumber } = getIndividualReminders(now);
 
