@@ -76,7 +76,7 @@ export async function confirmMedication(medicationId, slot) {
   return { confirmed: true, remaining: memoryStore.pending.length };
 }
 
-// Confirm the most recent pending reminder (for simple "done" replies)
+// Confirm the most recent pending reminder (for simple "done" replies via WhatsApp)
 export async function confirmLatestPending() {
   const pending = await getPendingReminders();
   if (pending.length === 0) {
@@ -91,6 +91,37 @@ export async function confirmLatestPending() {
     confirmed: true,
     medication: oldest.medication.name,
     remaining: result.remaining
+  };
+}
+
+// Confirm a specific reminder by its unique ID (for dashboard UI)
+export async function confirmById(reminderId) {
+  const pending = await getPendingReminders();
+  const reminder = pending.find(r => r.id === reminderId);
+
+  if (!reminder) {
+    return { confirmed: false, message: `Reminder ${reminderId} not found` };
+  }
+
+  const client = getRedis();
+  const updated = pending.filter(r => r.id !== reminderId);
+
+  if (client) {
+    await client.set(PENDING_KEY, updated, { ex: 86400 });
+
+    // Mark as confirmed for today
+    const today = new Date().toISOString().split('T')[0];
+    const key = `${reminder.slot}-${reminder.medicationId}`;
+    await client.set(`${CONFIRMED_PREFIX}${today}:${key}`, true, { ex: 86400 });
+  } else {
+    memoryStore.pending = updated;
+    memoryStore.confirmed.add(`${reminder.slot}-${reminder.medicationId}`);
+  }
+
+  return {
+    confirmed: true,
+    medication: reminder.medication.name,
+    remaining: updated.length
   };
 }
 

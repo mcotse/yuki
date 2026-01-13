@@ -327,7 +327,7 @@
                 <div class="pending-meta">${r.location} • ${r.dose} • ${r.scheduledTime}</div>
                 ${r.ageMinutes !== null ? `<div class="pending-meta">Sent ${r.ageMinutes}m ago</div>` : ''}
               </div>
-              <button class="confirm-btn" onclick="confirmMed()">Confirm</button>
+              <button class="confirm-btn" onclick="confirmMed('${r.id}')">Confirm</button>
             </li>
           `).join('');
         }
@@ -342,14 +342,20 @@
       }
     }
 
-    async function confirmMed() {
+    async function confirmMed(id) {
       try {
-        const res = await fetch(`${API_BASE}/api/pending`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/api/pending`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
         const data = await res.json();
 
         if (data.confirmed) {
           alert(`✅ Confirmed: ${data.medication}\n${data.remaining} remaining`);
           loadPending();
+        } else {
+          alert(`⚠️ ${data.message || 'Could not confirm'}`);
         }
       } catch (err) {
         console.error('Error confirming:', err);

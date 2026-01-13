@@ -1,6 +1,6 @@
 // API endpoint to get pending reminders
 
-import { getPendingReminders, confirmLatestPending, clearPending } from '../src/lib/storage.js';
+import { getPendingReminders, confirmLatestPending, confirmById, clearPending } from '../src/lib/storage.js';
 
 export const config = {
   runtime: 'nodejs'
@@ -33,7 +33,16 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    // Confirm the next pending medication
+    // If ID provided, confirm that specific reminder (from dashboard)
+    // Otherwise confirm oldest (from WhatsApp reply)
+    const { id } = req.body || {};
+
+    if (id) {
+      const result = await confirmById(id);
+      return res.status(200).json(result);
+    }
+
+    // Fallback for WhatsApp replies without ID
     const result = await confirmLatestPending();
     return res.status(200).json(result);
   }
