@@ -39,6 +39,13 @@
       font-size: 1.1rem;
     }
 
+    .current-time {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-top: 8px;
+      opacity: 0.95;
+    }
+
     .card {
       background: white;
       border-radius: 16px;
@@ -85,13 +92,66 @@
       border-radius: 12px;
     }
 
+    .slot.past {
+      background: #f0f0f0;
+      opacity: 0.7;
+    }
+
+    .slot.current {
+      background: #e8f5e9;
+      border: 2px solid #4caf50;
+    }
+
     .slot-header {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 12px;
       font-weight: 600;
       color: #333;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .slot-header.collapsible:hover {
+      opacity: 0.8;
+    }
+
+    .slot-toggle {
+      margin-left: auto;
+      font-size: 0.8rem;
+      color: #666;
+      transition: transform 0.2s;
+    }
+
+    .slot-toggle.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .slot-content {
+      margin-top: 12px;
+    }
+
+    .slot-content.collapsed {
+      display: none;
+    }
+
+    .slot-status {
+      margin-left: 8px;
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: #e0e0e0;
+      color: #666;
+    }
+
+    .slot-status.done {
+      background: #c8e6c9;
+      color: #2e7d32;
+    }
+
+    .slot-status.current {
+      background: #fff3cd;
+      color: #856404;
     }
 
     .slot-time {
@@ -263,6 +323,7 @@
     <header>
       <h1>🐕 Yuki Meds</h1>
       <p>Post-surgery medication tracker</p>
+      <div id="current-time" class="current-time">--:-- --</div>
     </header>
 
     <div class="card">
@@ -292,6 +353,61 @@
 
   <script>
     const API_BASE = '';
+
+    // Slot times for comparison (in 24h format)
+    const SLOT_HOURS = {
+      MORNING: 8.5,   // 8:30 AM
+      MIDDAY: 14,     // 2:00 PM
+      EVENING: 19,    // 7:00 PM
+      NIGHT: 24       // 12:00 AM (next day)
+    };
+
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        timeZone: 'America/Los_Angeles'
+      });
+      document.getElementById('current-time').textContent = timeStr;
+    }
+
+    function getCurrentSlot() {
+      const now = new Date();
+      const pstNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+      const currentHour = pstNow.getHours() + pstNow.getMinutes() / 60;
+
+      if (currentHour < SLOT_HOURS.MORNING) return 'BEFORE_MORNING';
+      if (currentHour < SLOT_HOURS.MIDDAY) return 'MORNING';
+      if (currentHour < SLOT_HOURS.EVENING) return 'MIDDAY';
+      if (currentHour < SLOT_HOURS.NIGHT) return 'EVENING';
+      return 'NIGHT';
+    }
+
+    function getSlotStatus(slot, currentSlot) {
+      const slotOrder = ['MORNING', 'MIDDAY', 'EVENING', 'NIGHT'];
+      const slotIndex = slotOrder.indexOf(slot);
+      const currentIndex = slotOrder.indexOf(currentSlot);
+
+      if (currentSlot === 'BEFORE_MORNING') return 'upcoming';
+      if (slotIndex < currentIndex) return 'past';
+      if (slotIndex === currentIndex) return 'current';
+      return 'upcoming';
+    }
+
+    function toggleSlot(slotId) {
+      const content = document.getElementById(`slot-content-${slotId}`);
+      const toggle = document.getElementById(`slot-toggle-${slotId}`);
+      if (content.classList.contains('collapsed')) {
+        content.classList.remove('collapsed');
+        toggle.classList.remove('collapsed');
+      } else {
+        content.classList.add('collapsed');
+        toggle.classList.add('collapsed');
+      }
+    }
 
     async function loadPending() {
       try {
@@ -391,16 +507,31 @@
           NIGHT: 'Night'
         };
 
+        const isToday = day === null;
+        const currentSlot = isToday ? getCurrentSlot() : null;
+
         let html = `<p style="margin-bottom: 16px; color: #666;">Day ${data.dayNumber} - ${data.date}</p>`;
 
         for (const [slot, info] of Object.entries(data.schedule)) {
+          const status = isToday ? getSlotStatus(slot, currentSlot) : 'upcoming';
+          const isPast = status === 'past';
+          const isCurrent = status === 'current';
+          const slotClass = isPast ? 'slot past' : (isCurrent ? 'slot current' : 'slot');
+          const isCollapsed = isPast;
+
+          const statusBadge = isPast ? '<span class="slot-status done">Done</span>' :
+                              isCurrent ? '<span class="slot-status current">Now</span>' : '';
+
           html += `
-            <div class="slot">
-              <div class="slot-header">
+            <div class="${slotClass}">
+              <div class="slot-header ${isPast ? 'collapsible' : ''}" ${isPast ? `onclick="toggleSlot('${slot}')"` : ''}>
                 <span>${slotEmojis[slot]} ${slotNames[slot]}</span>
                 <span class="slot-time">${info.time}</span>
+                ${statusBadge}
+                ${isPast ? `<span id="slot-toggle-${slot}" class="slot-toggle ${isCollapsed ? 'collapsed' : ''}">▼</span>` : ''}
               </div>
-              <ul class="med-list">
+              <div id="slot-content-${slot}" class="slot-content ${isCollapsed ? 'collapsed' : ''}">
+                <ul class="med-list">
           `;
 
           if (info.medications.length === 0) {
@@ -424,7 +555,7 @@
             }
           }
 
-          html += `</ul></div>`;
+          html += `</ul></div></div>`;
         }
 
         content.innerHTML = html;
@@ -442,6 +573,10 @@
     // Load on page load
     loadPending();
     loadSchedule();
+    updateClock();
+
+    // Update clock every second
+    setInterval(updateClock, 1000);
 
     // Auto-refresh pending every 30 seconds
     setInterval(loadPending, 30000);
