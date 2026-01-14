@@ -354,6 +354,9 @@
   <script>
     const API_BASE = '';
 
+    // Track which slots have pending medications
+    let pendingSlots = new Set();
+
     // Slot times for comparison (in 24h format)
     const SLOT_HOURS = {
       MORNING: 8.5,   // 8:30 AM
@@ -414,6 +417,9 @@
         const res = await fetch(`${API_BASE}/api/pending`);
         const data = await res.json();
 
+        // Update pending slots tracking
+        pendingSlots = new Set(data.reminders?.map(r => r.slot) || []);
+
         const statusBar = document.getElementById('pending-status');
         const list = document.getElementById('pending-list');
 
@@ -447,6 +453,9 @@
             </li>
           `).join('');
         }
+
+        // Refresh schedule to update Done/Now badges
+        loadSchedule();
       } catch (err) {
         console.error('Error loading pending:', err);
         document.getElementById('pending-list').innerHTML = `
@@ -515,19 +524,22 @@
           const status = isToday ? getSlotStatus(slot, currentSlot) : 'upcoming';
           const isPast = status === 'past';
           const isCurrent = status === 'current';
-          const slotClass = isPast ? 'slot past' : (isCurrent ? 'slot current' : 'slot');
-          const isCollapsed = isPast;
+          // Current slot with no pending meds is considered "done"
+          const isCurrentDone = isCurrent && !pendingSlots.has(slot);
+          const isDone = isPast || isCurrentDone;
+          const slotClass = isDone ? 'slot past' : (isCurrent ? 'slot current' : 'slot');
+          const isCollapsed = isDone;
 
-          const statusBadge = isPast ? '<span class="slot-status done">Done</span>' :
+          const statusBadge = isDone ? '<span class="slot-status done">Done</span>' :
                               isCurrent ? '<span class="slot-status current">Now</span>' : '';
 
           html += `
             <div class="${slotClass}">
-              <div class="slot-header ${isPast ? 'collapsible' : ''}" ${isPast ? `onclick="toggleSlot('${slot}')"` : ''}>
+              <div class="slot-header ${isDone ? 'collapsible' : ''}" ${isDone ? `onclick="toggleSlot('${slot}')"` : ''}>
                 <span>${slotEmojis[slot]} ${slotNames[slot]}</span>
                 <span class="slot-time">${info.time}</span>
                 ${statusBadge}
-                ${isPast ? `<span id="slot-toggle-${slot}" class="slot-toggle ${isCollapsed ? 'collapsed' : ''}">▼</span>` : ''}
+                ${isDone ? `<span id="slot-toggle-${slot}" class="slot-toggle ${isCollapsed ? 'collapsed' : ''}">▼</span>` : ''}
               </div>
               <div id="slot-content-${slot}" class="slot-content ${isCollapsed ? 'collapsed' : ''}">
                 <ul class="med-list">
