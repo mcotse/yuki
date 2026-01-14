@@ -3,7 +3,7 @@
 
 import { getIndividualReminders, getCurrentTimeSlot } from '../src/lib/scheduler.js';
 import { sendWhatsApp } from '../src/lib/twilio.js';
-import { addPendingReminders, markRemindersSent, getRemindersToResend, getPendingReminders } from '../src/lib/storage.js';
+import { addPendingReminders, markRemindersSent, getRemindersToResend, getPendingReminders, claimSlot } from '../src/lib/storage.js';
 
 export const config = {
   runtime: 'nodejs'
@@ -67,18 +67,16 @@ export default async function handler(req, res) {
     });
   }
 
-  // Check if we already sent reminders for this slot
-  const existingPending = await getPendingReminders();
-  const alreadySentForSlot = existingPending.filter(r => r.slot === slot);
+  // Atomically claim this slot to prevent duplicate sends from concurrent cron triggers
+  const claimed = await claimSlot(slot, now);
 
-  if (alreadySentForSlot.length > 0) {
-    console.log(`[Cron] Already sent ${alreadySentForSlot.length} reminders for ${slot}, skipping`);
+  if (!claimed) {
+    console.log(`[Cron] Slot ${slot} already claimed by another invocation, skipping`);
     return res.status(200).json({
       triggered: true,
       slot,
       sent: false,
-      reason: `Already sent reminders for ${slot}`,
-      existingCount: alreadySentForSlot.length
+      reason: `Slot ${slot} already claimed`
     });
   }
 

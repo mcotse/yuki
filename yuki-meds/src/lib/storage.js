@@ -137,6 +137,34 @@ export async function getRemindersToResend(minutesThreshold = 30) {
   });
 }
 
+// Atomically claim a slot to prevent duplicate sends (uses SETNX)
+// Returns true if this invocation claimed the slot, false if already claimed
+export async function claimSlot(slot, date = new Date()) {
+  const dateStr = date.toISOString().split('T')[0];
+  const key = `yuki:sent:${dateStr}:${slot}`;
+
+  const client = getRedis();
+  if (client) {
+    // SETNX: only sets if key doesn't exist, returns true if set, false if existed
+    const claimed = await client.setnx(key, Date.now());
+    if (claimed) {
+      // Set expiry so it cleans up (2 hours is plenty)
+      await client.expire(key, 7200);
+    }
+    return claimed === 1;
+  }
+
+  // Memory fallback for local dev
+  if (!memoryStore.sentSlots) {
+    memoryStore.sentSlots = new Set();
+  }
+  if (memoryStore.sentSlots.has(key)) {
+    return false;
+  }
+  memoryStore.sentSlots.add(key);
+  return true;
+}
+
 // Clear all pending (for testing/reset)
 export async function clearPending() {
   const client = getRedis();
