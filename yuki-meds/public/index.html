@@ -468,7 +468,6 @@
         const data = await res.json();
 
         if (data.confirmed) {
-          alert(`✅ Confirmed: ${data.medication}\n${data.remaining} remaining`);
           loadPending();
         } else {
           alert(`⚠️ ${data.message || 'Could not confirm'}`);
