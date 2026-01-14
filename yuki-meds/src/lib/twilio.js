@@ -27,27 +27,41 @@ function getClient() {
 export async function sendWhatsApp(message) {
   const twilioClient = getClient();
   const results = [];
+  const timestamp = new Date().toISOString();
+
+  console.log(`[WhatsApp ${timestamp}] Sending to ${RECIPIENT_NUMBERS.length} recipients`);
+  console.log(`[WhatsApp ${timestamp}] Message preview: "${message.substring(0, 50)}..."`);
 
   for (const number of RECIPIENT_NUMBERS) {
     try {
+      console.log(`[WhatsApp ${timestamp}] Attempting send to ${number}...`);
       const result = await twilioClient.messages.create({
         body: message,
         from: `whatsapp:${WHATSAPP_SANDBOX}`,
         to: `whatsapp:${number}`
       });
+      console.log(`[WhatsApp ${timestamp}] SUCCESS: ${number} - SID: ${result.sid}, Status: ${result.status}`);
       results.push({
         sid: result.sid,
         status: result.status,
-        to: result.to
+        to: result.to,
+        success: true
       });
     } catch (error) {
-      console.error(`Failed to send to ${number}:`, error.message);
+      console.error(`[WhatsApp ${timestamp}] FAILED: ${number} - Error: ${error.message}`);
+      console.error(`[WhatsApp ${timestamp}] Error code: ${error.code}, Status: ${error.status}`);
       results.push({
         to: number,
-        error: error.message
+        error: error.message,
+        errorCode: error.code,
+        success: false
       });
     }
   }
+
+  const successCount = results.filter(r => r.success).length;
+  const failCount = results.filter(r => !r.success).length;
+  console.log(`[WhatsApp ${timestamp}] Complete: ${successCount} sent, ${failCount} failed`);
 
   return results;
 }

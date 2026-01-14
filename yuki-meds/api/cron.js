@@ -33,7 +33,18 @@ export default async function handler(req, res) {
         `⚠️ Please reply "done" when taken`;
 
       try {
-        await sendWhatsApp(reRemindMsg);
+        console.log(`[Cron] Re-sending reminder for ${reminder.medication.name}...`);
+        const sendResults = await sendWhatsApp(reRemindMsg);
+
+        // Log per-recipient results
+        for (const result of sendResults) {
+          if (result.success) {
+            console.log(`[Cron] Re-remind ${reminder.medication.name} -> ${result.to}: sent (${result.sid})`);
+          } else {
+            console.error(`[Cron] Re-remind ${reminder.medication.name} -> ${result.to}: FAILED - ${result.error}`);
+          }
+        }
+
         // Update sentAt to reset the 30-min timer
         await markRemindersSent([reminder.id]);
       } catch (error) {
@@ -99,7 +110,18 @@ export default async function handler(req, res) {
 
   for (const reminder of reminders) {
     try {
-      await sendWhatsApp(reminder.message);
+      console.log(`[Cron] Sending reminder for ${reminder.medication.name}...`);
+      const sendResults = await sendWhatsApp(reminder.message);
+
+      // Log per-recipient results
+      for (const result of sendResults) {
+        if (result.success) {
+          console.log(`[Cron] ${reminder.medication.name} -> ${result.to}: sent (${result.sid})`);
+        } else {
+          console.error(`[Cron] ${reminder.medication.name} -> ${result.to}: FAILED - ${result.error}`);
+        }
+      }
+
       reminder.sentAt = Date.now();
       sentIds.push(reminder.id);
 
