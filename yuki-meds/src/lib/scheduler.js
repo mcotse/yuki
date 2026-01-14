@@ -116,6 +116,7 @@ export function getIndividualReminders(date = new Date()) {
   const allMeds = getAllMedications();
   const dueMeds = allMeds.filter(med => med.active && isMedicationDue(med, slot, date));
   const dayNumber = getDayNumber(date);
+  const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD for deterministic IDs
 
   // Group by location to calculate stagger
   const byLocation = {};
@@ -149,8 +150,9 @@ export function getIndividualReminders(date = new Date()) {
         globalStaggerIndex++;
       }
 
+      // Deterministic ID: date + slot + medication (prevents duplicates on re-runs)
       const reminder = {
-        id: `${slot}-${med.id}-${Date.now()}`,
+        id: `${dateStr}-${slot}-${med.id}`,
         medicationId: med.id,
         medication: med,
         slot,

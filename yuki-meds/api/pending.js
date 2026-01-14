@@ -1,6 +1,6 @@
 // API endpoint to get pending reminders
 
-import { getPendingReminders, confirmLatestPending, confirmById, clearPending } from '../src/lib/storage.js';
+import { getPendingReminders, confirmLatestPending, confirmById, clearPending, dedupePendingReminders } from '../src/lib/storage.js';
 
 export const config = {
   runtime: 'nodejs'
@@ -9,7 +9,7 @@ export const config = {
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, PATCH, OPTIONS');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -51,6 +51,12 @@ export default async function handler(req, res) {
     // Clear all pending (for testing)
     await clearPending();
     return res.status(200).json({ cleared: true });
+  }
+
+  if (req.method === 'PATCH') {
+    // Deduplicate pending reminders
+    const result = await dedupePendingReminders();
+    return res.status(200).json(result);
   }
 
   return res.status(405).json({ error: 'Method not allowed' });

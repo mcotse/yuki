@@ -37,16 +37,34 @@ export async function getPendingReminders() {
   return memoryStore.pending;
 }
 
-// Add reminders to pending list
+// Add reminders to pending list (dedupes by ID to prevent duplicates)
 export async function addPendingReminders(reminders) {
   const client = getRedis();
   if (client) {
     const existing = await getPendingReminders();
-    const updated = [...existing, ...reminders];
+    const existingIds = new Set(existing.map(r => r.id));
+
+    // Only add reminders that don't already exist
+    const newReminders = reminders.filter(r => !existingIds.has(r.id));
+
+    if (newReminders.length === 0) {
+      console.log(`[Storage] All ${reminders.length} reminders already exist, skipping`);
+      return existing;
+    }
+
+    if (newReminders.length < reminders.length) {
+      console.log(`[Storage] Filtered ${reminders.length - newReminders.length} duplicate reminders`);
+    }
+
+    const updated = [...existing, ...newReminders];
     await client.set(PENDING_KEY, updated, { ex: 86400 }); // 24h expiry
     return updated;
   }
-  memoryStore.pending = [...memoryStore.pending, ...reminders];
+
+  // Memory fallback with same deduplication
+  const existingIds = new Set(memoryStore.pending.map(r => r.id));
+  const newReminders = reminders.filter(r => !existingIds.has(r.id));
+  memoryStore.pending = [...memoryStore.pending, ...newReminders];
   return memoryStore.pending;
 }
 
@@ -173,6 +191,38 @@ export async function clearPending() {
   }
   memoryStore.pending = [];
   memoryStore.confirmed.clear();
+}
+
+// Deduplicate pending reminders by medication ID + slot (removes existing duplicates)
+export async function dedupePendingReminders() {
+  const pending = await getPendingReminders();
+  const seen = new Map(); // key -> reminder (keeps most recent sentAt)
+
+  for (const reminder of pending) {
+    const key = `${reminder.slot}-${reminder.medicationId}`;
+    const existing = seen.get(key);
+
+    // Keep the one with the most recent sentAt
+    if (!existing || (reminder.sentAt && (!existing.sentAt || reminder.sentAt > existing.sentAt))) {
+      seen.set(key, reminder);
+    }
+  }
+
+  const deduped = Array.from(seen.values());
+  const removed = pending.length - deduped.length;
+
+  if (removed > 0) {
+    console.log(`[Storage] Deduped: removed ${removed} duplicates, ${deduped.length} remaining`);
+
+    const client = getRedis();
+    if (client) {
+      await client.set(PENDING_KEY, deduped, { ex: 86400 });
+    } else {
+      memoryStore.pending = deduped;
+    }
+  }
+
+  return { before: pending.length, after: deduped.length, removed };
 }
 
 // Update sentAt timestamp for reminders
