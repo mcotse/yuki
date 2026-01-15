@@ -1,8 +1,8 @@
 // Vercel Cron endpoint - triggered at medication times
-// Sends individual WhatsApp reminders with staggered timing
+// Sends individual reminders via WhatsApp and Messenger
 
 import { getIndividualReminders, getCurrentTimeSlot } from '../src/lib/scheduler.js';
-import { sendWhatsApp } from '../src/lib/twilio.js';
+import { sendNotification } from '../src/lib/notifications.js';
 import { addPendingReminders, markRemindersSent, getRemindersToResend, getPendingReminders, claimSlot } from '../src/lib/storage.js';
 
 export const config = {
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
 
       try {
         console.log(`[Cron] Re-sending reminder for ${reminder.medication.name}...`);
-        const sendResults = await sendWhatsApp(reRemindMsg);
+        const sendResults = await sendNotification(reRemindMsg);
 
         // Log per-recipient results
         for (const result of sendResults) {
@@ -111,7 +111,7 @@ export default async function handler(req, res) {
   for (const reminder of reminders) {
     try {
       console.log(`[Cron] Sending reminder for ${reminder.medication.name}...`);
-      const sendResults = await sendWhatsApp(reminder.message);
+      const sendResults = await sendNotification(reminder.message);
 
       // Log per-recipient results
       for (const result of sendResults) {
