@@ -5,6 +5,7 @@ import { Redis } from '@upstash/redis';
 
 const PENDING_KEY = 'yuki:pending';
 const CONFIRMED_PREFIX = 'yuki:confirmed:';
+const SCHEDULE_PREFIX = 'yuki:schedule:';
 
 // Check if we're in production with Upstash credentials
 const hasUpstash = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -69,21 +70,29 @@ export async function addPendingReminders(reminders) {
 }
 
 // Mark a medication as confirmed
-export async function confirmMedication(medicationId, slot) {
+export async function confirmMedication(medicationId, slot, medication = null) {
   const key = `${slot}-${medicationId}`;
   const client = getRedis();
+  const confirmedAt = Date.now();
 
   if (client) {
     // Remove from pending
     const pending = await getPendingReminders();
+    const reminder = pending.find(r => r.medicationId === medicationId && r.slot === slot);
     const updated = pending.filter(r => !(r.medicationId === medicationId && r.slot === slot));
     await client.set(PENDING_KEY, updated, { ex: 86400 });
 
-    // Mark as confirmed for today
+    // Store confirmation with timestamp and medication details
     const today = new Date().toISOString().split('T')[0];
-    await client.set(`${CONFIRMED_PREFIX}${today}:${key}`, true, { ex: 86400 });
+    const confirmationData = {
+      confirmedAt,
+      medicationId,
+      slot,
+      medication: medication || reminder?.medication || { name: medicationId }
+    };
+    await client.set(`${CONFIRMED_PREFIX}${today}:${key}`, confirmationData, { ex: 86400 });
 
-    return { confirmed: true, remaining: updated.length };
+    return { confirmed: true, remaining: updated.length, confirmedAt };
   }
 
   // Memory fallback
@@ -91,7 +100,7 @@ export async function confirmMedication(medicationId, slot) {
     r => !(r.medicationId === medicationId && r.slot === slot)
   );
   memoryStore.confirmed.add(key);
-  return { confirmed: true, remaining: memoryStore.pending.length };
+  return { confirmed: true, remaining: memoryStore.pending.length, confirmedAt };
 }
 
 // Confirm the most recent pending reminder (for simple "done" replies via WhatsApp)
@@ -123,14 +132,21 @@ export async function confirmById(reminderId) {
 
   const client = getRedis();
   const updated = pending.filter(r => r.id !== reminderId);
+  const confirmedAt = Date.now();
 
   if (client) {
     await client.set(PENDING_KEY, updated, { ex: 86400 });
 
-    // Mark as confirmed for today
+    // Store confirmation with timestamp and medication details
     const today = new Date().toISOString().split('T')[0];
     const key = `${reminder.slot}-${reminder.medicationId}`;
-    await client.set(`${CONFIRMED_PREFIX}${today}:${key}`, true, { ex: 86400 });
+    const confirmationData = {
+      confirmedAt,
+      medicationId: reminder.medicationId,
+      slot: reminder.slot,
+      medication: reminder.medication
+    };
+    await client.set(`${CONFIRMED_PREFIX}${today}:${key}`, confirmationData, { ex: 86400 });
   } else {
     memoryStore.pending = updated;
     memoryStore.confirmed.add(`${reminder.slot}-${reminder.medicationId}`);
@@ -139,7 +155,8 @@ export async function confirmById(reminderId) {
   return {
     confirmed: true,
     medication: reminder.medication.name,
-    remaining: updated.length
+    remaining: updated.length,
+    confirmedAt
   };
 }
 
@@ -225,6 +242,52 @@ export async function dedupePendingReminders() {
   return { before: pending.length, after: deduped.length, removed };
 }
 
+// Get confirmation history for a specific date
+export async function getConfirmationHistory(date = new Date()) {
+  const dateStr = date.toISOString().split('T')[0];
+  const client = getRedis();
+
+  if (client) {
+    // Scan for all confirmation keys for this date
+    // Pattern: yuki:confirmed:YYYY-MM-DD:SLOT-medicationId
+    const pattern = `${CONFIRMED_PREFIX}${dateStr}:*`;
+    const keys = [];
+
+    // Use SCAN to find all matching keys
+    let cursor = 0;
+    do {
+      const result = await client.scan(cursor, { match: pattern, count: 100 });
+      cursor = result[0];
+      keys.push(...result[1]);
+    } while (cursor !== 0);
+
+    // Fetch all confirmation data
+    const confirmations = [];
+    for (const key of keys) {
+      const data = await client.get(key);
+      if (data && typeof data === 'object' && data.confirmedAt) {
+        confirmations.push(data);
+      }
+    }
+
+    // Sort by confirmation time (most recent first)
+    confirmations.sort((a, b) => b.confirmedAt - a.confirmedAt);
+    return confirmations;
+  }
+
+  // Memory fallback - return basic data
+  const confirmations = [];
+  for (const key of memoryStore.confirmed) {
+    confirmations.push({
+      confirmedAt: Date.now(),
+      slot: key.split('-')[0],
+      medicationId: key.split('-').slice(1).join('-'),
+      medication: { name: key.split('-').slice(1).join('-') }
+    });
+  }
+  return confirmations;
+}
+
 // Update sentAt timestamp for reminders
 export async function markRemindersSent(reminderIds) {
   const pending = await getPendingReminders();
@@ -245,4 +308,97 @@ export async function markRemindersSent(reminderIds) {
   }
 
   return updated;
+}
+
+// ===== MEDICATION SCHEDULE STORAGE =====
+
+// Get custom schedule for a medication (returns null if using default)
+export async function getMedicationSchedule(medicationId) {
+  const client = getRedis();
+  const key = `${SCHEDULE_PREFIX}${medicationId}`;
+
+  if (client) {
+    const schedule = await client.get(key);
+    return schedule || null;
+  }
+
+  // Memory fallback
+  if (!memoryStore.schedules) {
+    memoryStore.schedules = new Map();
+  }
+  return memoryStore.schedules.get(medicationId) || null;
+}
+
+// Get all custom schedules
+export async function getAllCustomSchedules() {
+  const client = getRedis();
+
+  if (client) {
+    const pattern = `${SCHEDULE_PREFIX}*`;
+    const keys = [];
+
+    let cursor = 0;
+    do {
+      const result = await client.scan(cursor, { match: pattern, count: 100 });
+      cursor = result[0];
+      keys.push(...result[1]);
+    } while (cursor !== 0);
+
+    const schedules = {};
+    for (const key of keys) {
+      const medicationId = key.replace(SCHEDULE_PREFIX, '');
+      const schedule = await client.get(key);
+      if (schedule) {
+        schedules[medicationId] = schedule;
+      }
+    }
+    return schedules;
+  }
+
+  // Memory fallback
+  if (!memoryStore.schedules) {
+    return {};
+  }
+  return Object.fromEntries(memoryStore.schedules);
+}
+
+// Update a medication's schedule
+export async function updateMedicationSchedule(medicationId, scheduleUpdate) {
+  const client = getRedis();
+  const key = `${SCHEDULE_PREFIX}${medicationId}`;
+
+  // scheduleUpdate can include: frequency, timeSlots, active, notes
+  const scheduleData = {
+    ...scheduleUpdate,
+    updatedAt: Date.now()
+  };
+
+  if (client) {
+    await client.set(key, scheduleData);
+    return { updated: true, medicationId, schedule: scheduleData };
+  }
+
+  // Memory fallback
+  if (!memoryStore.schedules) {
+    memoryStore.schedules = new Map();
+  }
+  memoryStore.schedules.set(medicationId, scheduleData);
+  return { updated: true, medicationId, schedule: scheduleData };
+}
+
+// Reset a medication's schedule to default (remove custom schedule)
+export async function resetMedicationSchedule(medicationId) {
+  const client = getRedis();
+  const key = `${SCHEDULE_PREFIX}${medicationId}`;
+
+  if (client) {
+    await client.del(key);
+    return { reset: true, medicationId };
+  }
+
+  // Memory fallback
+  if (memoryStore.schedules) {
+    memoryStore.schedules.delete(medicationId);
+  }
+  return { reset: true, medicationId };
 }

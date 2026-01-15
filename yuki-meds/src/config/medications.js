@@ -142,6 +142,30 @@ export const medications = {
   ]
 };
 
+// Medication dependencies - eye drops on same eye need 5 minute spacing
+// This allows each drop to absorb before applying the next
+export const MEDICATION_DEPENDENCIES = {
+  // Spacing in minutes required between conflicting medications
+  spacingMinutes: 5,
+
+  // Groups of medications that conflict with each other (same eye)
+  conflictGroups: {
+    leftEye: ['ofloxacin', 'plasma', 'amniotic', 'atropine'],
+    rightEye: ['prednisolone-eye', 'tacrolimus-cyclosporine']
+  }
+};
+
+// Get medications that conflict with a given medication
+export function getConflictingMeds(medicationId) {
+  for (const [group, meds] of Object.entries(MEDICATION_DEPENDENCIES.conflictGroups)) {
+    if (meds.includes(medicationId)) {
+      // Return all other meds in the same group
+      return meds.filter(m => m !== medicationId);
+    }
+  }
+  return [];
+}
+
 // Helper to get all medications as flat array
 export function getAllMedications() {
   return [

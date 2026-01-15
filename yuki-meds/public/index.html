@@ -154,6 +154,353 @@
       color: #856404;
     }
 
+    .confirmed-time {
+      font-size: 0.75rem;
+      color: #28a745;
+      margin-top: 4px;
+    }
+
+    .med-item.confirmed {
+      opacity: 0.8;
+      background: #e8f5e9;
+    }
+
+    .history-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+
+    .history-header h3 {
+      color: #666;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .history-toggle {
+      color: #666;
+      font-size: 0.8rem;
+      transition: transform 0.2s;
+    }
+
+    .history-toggle.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .history-list {
+      list-style: none;
+      margin-top: 12px;
+    }
+
+    .history-list.collapsed {
+      display: none;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #f0f8f0;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      border-left: 3px solid #28a745;
+    }
+
+    .history-item .check-icon {
+      color: #28a745;
+      font-size: 1.2rem;
+    }
+
+    .history-item .med-info {
+      flex: 1;
+    }
+
+    .history-item .time {
+      color: #666;
+      font-size: 0.85rem;
+    }
+
+    /* Medication Detail Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      color: #333;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+      padding: 4px 8px;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-section {
+      margin-bottom: 20px;
+    }
+
+    .modal-section h3 {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-info {
+      display: grid;
+      gap: 12px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .info-label {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .info-value {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .schedule-select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: white;
+      cursor: pointer;
+    }
+
+    .schedule-select:focus {
+      border-color: #667eea;
+      outline: none;
+    }
+
+    .time-slots-display {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .time-slot-badge {
+      background: #e8f0fe;
+      color: #1a73e8;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 26px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.3s;
+      border-radius: 26px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #28a745;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      border: none;
+      color: #666;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      border: none;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5a6fd6;
+    }
+
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .med-item.clickable {
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .med-item.clickable:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .custom-badge {
+      background: #fff3cd;
+      color: #856404;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+
+    /* Dependency Warning Styles */
+    .pending-item.has-warning {
+      background: #fff0f0;
+      border-left-color: #dc3545;
+    }
+
+    .dependency-warning {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      padding: 6px 10px;
+      background: #ffe0e0;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: #c62828;
+    }
+
+    .dependency-warning .warning-icon {
+      font-size: 1rem;
+    }
+
+    .dependency-warning .countdown {
+      font-weight: 600;
+      color: #b71c1c;
+    }
+
+    .pending-item.warning-cleared {
+      background: #e8f5e9;
+      border-left-color: #28a745;
+    }
+
+    .ready-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      padding: 4px 8px;
+      background: #c8e6c9;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: #2e7d32;
+    }
+
     .slot-time {
       background: #667eea;
       color: white;
@@ -351,11 +698,190 @@
     </div>
   </div>
 
+  <!-- Medication Detail Modal -->
+  <div id="med-modal" class="modal-overlay" onclick="closeMedModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modal-title">Medication Details</h2>
+        <button class="modal-close" onclick="closeMedModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-section">
+          <h3>Medication Info</h3>
+          <div class="modal-info">
+            <div class="info-row">
+              <span class="info-label">Name</span>
+              <span class="info-value" id="modal-med-name">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Dose</span>
+              <span class="info-value" id="modal-med-dose">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Location</span>
+              <span class="info-value" id="modal-med-location">-</span>
+            </div>
+            <div class="info-row" id="modal-notes-row" style="display: none;">
+              <span class="info-label">Notes</span>
+              <span class="info-value" id="modal-med-notes">-</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <h3>Schedule Settings</h3>
+          <div class="modal-info">
+            <div class="info-row">
+              <span class="info-label">Frequency</span>
+              <select id="modal-frequency" class="schedule-select" onchange="updateTimeSlots()">
+                <option value="4x_daily">4x Daily</option>
+                <option value="2x_daily">2x Daily</option>
+                <option value="1x_daily">1x Daily</option>
+                <option value="12h">Every 12 Hours</option>
+              </select>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Active</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="modal-active" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div style="margin-top: 12px;">
+            <span class="info-label">Time Slots:</span>
+            <div id="modal-time-slots" class="time-slots-display">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="resetToDefault()">Reset to Default</button>
+        <button class="btn btn-primary" id="modal-save-btn" onclick="saveSchedule()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const API_BASE = '';
 
     // Track which slots have pending medications
     let pendingSlots = new Set();
+
+    // Track confirmation history
+    let confirmationHistory = [];
+    // Map: slot-medicationId -> confirmedAt timestamp
+    let confirmedMeds = new Map();
+
+    // Current medication being edited in modal
+    let currentMedication = null;
+
+    // Time slots configuration
+    const FREQUENCY_SLOTS = {
+      '4x_daily': ['MORNING', 'MIDDAY', 'EVENING', 'NIGHT'],
+      '2x_daily': ['MORNING', 'EVENING'],
+      '1x_daily': ['MORNING'],
+      '12h': ['MORNING', 'EVENING']
+    };
+
+    const TIME_SLOT_LABELS = {
+      MORNING: '8:30 AM',
+      MIDDAY: '2:00 PM',
+      EVENING: '7:00 PM',
+      NIGHT: '12:00 AM'
+    };
+
+    // Medication dependency configuration
+    const DEPENDENCY_CONFIG = {
+      spacingMinutes: 5,
+      conflictGroups: {
+        leftEye: ['ofloxacin', 'plasma', 'amniotic', 'atropine'],
+        rightEye: ['prednisolone-eye', 'tacrolimus-cyclosporine']
+      }
+    };
+
+    // Get medications that conflict with a given medication ID
+    function getConflictingMeds(medicationId) {
+      for (const meds of Object.values(DEPENDENCY_CONFIG.conflictGroups)) {
+        if (meds.includes(medicationId)) {
+          return meds.filter(m => m !== medicationId);
+        }
+      }
+      return [];
+    }
+
+    // Check if a medication has a recent conflicting confirmation
+    // Returns { hasConflict, conflictingMed, timeRemaining } or null
+    function checkDependencyConflict(medicationId, slot) {
+      const conflictingMeds = getConflictingMeds(medicationId);
+      if (conflictingMeds.length === 0) return null;
+
+      const spacingMs = DEPENDENCY_CONFIG.spacingMinutes * 60 * 1000;
+      const now = Date.now();
+
+      for (const conflictId of conflictingMeds) {
+        // Check if this conflicting med was confirmed recently
+        const confirmKey = `${slot}-${conflictId}`;
+        const confirmedAt = confirmedMeds.get(confirmKey);
+
+        if (confirmedAt) {
+          const elapsed = now - confirmedAt;
+          const remaining = spacingMs - elapsed;
+
+          if (remaining > 0) {
+            // Find the medication name
+            const conflictMed = confirmationHistory.find(c =>
+              c.medicationId === conflictId && c.slot === slot
+            );
+
+            return {
+              hasConflict: true,
+              conflictingMed: conflictMed?.medication || conflictId,
+              timeRemaining: remaining,
+              remainingSeconds: Math.ceil(remaining / 1000),
+              remainingMinutes: Math.ceil(remaining / 60000)
+            };
+          }
+        }
+      }
+
+      return null;
+    }
+
+    // Update countdown timers for dependency warnings
+    let countdownInterval = null;
+
+    function startCountdownUpdates() {
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      countdownInterval = setInterval(() => {
+        const countdowns = document.querySelectorAll('.countdown');
+        if (countdowns.length === 0) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+          return;
+        }
+
+        let needsRefresh = false;
+        countdowns.forEach(el => {
+          const endTime = parseInt(el.dataset.endTime);
+          const remaining = endTime - Date.now();
+
+          if (remaining <= 0) {
+            needsRefresh = true;
+          } else {
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.ceil((remaining % 60000) / 1000);
+            el.textContent = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+          }
+        });
+
+        if (needsRefresh) {
+          loadPending(); // Refresh to clear expired warnings
+        }
+      }, 1000);
+    }
 
     // Slot times for comparison (in 24h format)
     const SLOT_HOURS = {
@@ -412,10 +938,44 @@
       }
     }
 
+    async function loadConfirmationHistory() {
+      try {
+        const res = await fetch(`${API_BASE}/api/pending?history`);
+        const data = await res.json();
+        confirmationHistory = data.confirmations || [];
+
+        // Build map of confirmed medications for schedule display
+        confirmedMeds.clear();
+        for (const c of confirmationHistory) {
+          const key = `${c.slot}-${c.medicationId}`;
+          confirmedMeds.set(key, c.confirmedAt);
+        }
+
+        return confirmationHistory;
+      } catch (err) {
+        console.error('Error loading history:', err);
+        return [];
+      }
+    }
+
+    function formatTimeAgo(timestamp) {
+      const diff = Date.now() - timestamp;
+      const minutes = Math.floor(diff / 60000);
+      if (minutes < 1) return 'just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      return new Date(timestamp).toLocaleDateString();
+    }
+
     async function loadPending() {
       try {
-        const res = await fetch(`${API_BASE}/api/pending`);
-        const data = await res.json();
+        // Load both pending and history in parallel
+        const [pendingRes, _] = await Promise.all([
+          fetch(`${API_BASE}/api/pending`),
+          loadConfirmationHistory()
+        ]);
+        const data = await pendingRes.json();
 
         // Update pending slots tracking
         pendingSlots = new Set(data.reminders?.map(r => r.slot) || []);
@@ -423,13 +983,16 @@
         const statusBar = document.getElementById('pending-status');
         const list = document.getElementById('pending-list');
 
+        let pendingHtml = '';
+        let historyHtml = '';
+
         if (data.count === 0) {
           statusBar.className = 'status-bar';
           statusBar.innerHTML = `
             <span>✅ All medications confirmed!</span>
             <button class="refresh-btn" onclick="loadPending()">Refresh</button>
           `;
-          list.innerHTML = `
+          pendingHtml = `
             <li class="empty-state">
               <div class="icon">🎉</div>
               <div>No pending medications</div>
@@ -442,17 +1005,77 @@
             <button class="refresh-btn" onclick="loadPending()">Refresh</button>
           `;
 
-          list.innerHTML = data.reminders.map(r => `
-            <li class="pending-item">
-              <div class="pending-info">
-                <div class="pending-name">${r.medication}</div>
-                <div class="pending-meta">${r.location} • ${r.dose} • ${r.scheduledTime}</div>
-                ${r.ageMinutes !== null ? `<div class="pending-meta">Sent ${r.ageMinutes}m ago</div>` : ''}
-              </div>
-              <button class="confirm-btn" onclick="confirmMed('${r.id}')">Confirm</button>
-            </li>
-          `).join('');
+          pendingHtml = data.reminders.map(r => {
+            // Check for dependency conflicts
+            const conflict = checkDependencyConflict(r.medicationId, r.slot);
+            const hasWarning = conflict && conflict.hasConflict;
+            const warningCleared = !hasWarning && getConflictingMeds(r.medicationId).length > 0 &&
+              confirmationHistory.some(c => c.slot === r.slot && getConflictingMeds(r.medicationId).includes(c.medicationId));
+
+            let warningHtml = '';
+            if (hasWarning) {
+              const endTime = Date.now() + conflict.timeRemaining;
+              warningHtml = `
+                <div class="dependency-warning">
+                  <span class="warning-icon">⚠️</span>
+                  <span>Wait <span class="countdown" data-end-time="${endTime}">${conflict.remainingMinutes}m</span> after ${conflict.conflictingMed}</span>
+                </div>
+              `;
+            } else if (warningCleared) {
+              warningHtml = `
+                <div class="ready-badge">
+                  <span>✓</span>
+                  <span>Ready to administer</span>
+                </div>
+              `;
+            }
+
+            const itemClass = hasWarning ? 'pending-item has-warning' : (warningCleared ? 'pending-item warning-cleared' : 'pending-item');
+
+            return `
+              <li class="${itemClass}">
+                <div class="pending-info">
+                  <div class="pending-name">${r.medication}</div>
+                  <div class="pending-meta">${r.location} • ${r.dose} • ${r.scheduledTime}</div>
+                  ${r.ageMinutes !== null ? `<div class="pending-meta">Sent ${r.ageMinutes}m ago</div>` : ''}
+                  ${warningHtml}
+                </div>
+                <button class="confirm-btn" onclick="confirmMed('${r.id}')" ${hasWarning ? 'title="Spacing warning - proceed with caution"' : ''}>Confirm</button>
+              </li>
+            `;
+          }).join('');
+
+          // Start countdown updates if there are warnings
+          if (pendingHtml.includes('countdown')) {
+            startCountdownUpdates();
+          }
         }
+
+        // Add confirmation history section
+        if (confirmationHistory.length > 0) {
+          historyHtml = `
+            <div class="history-section">
+              <div class="history-header" onclick="toggleHistory()">
+                <h3>✅ Recently Confirmed (${confirmationHistory.length})</h3>
+                <span id="history-toggle" class="history-toggle">▼</span>
+              </div>
+              <ul id="history-list" class="history-list">
+                ${confirmationHistory.slice(0, 10).map(c => `
+                  <li class="history-item">
+                    <span class="check-icon">✓</span>
+                    <div class="med-info">
+                      <div class="pending-name">${c.medication}</div>
+                      <div class="pending-meta">${c.location || ''} ${c.dose ? '• ' + c.dose : ''}</div>
+                    </div>
+                    <span class="time">${c.confirmedAtFormatted}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          `;
+        }
+
+        list.innerHTML = pendingHtml + historyHtml;
 
         // Refresh schedule to update Done/Now badges
         loadSchedule();
@@ -464,6 +1087,168 @@
             <div>Error loading pending reminders</div>
           </li>
         `;
+      }
+    }
+
+    function toggleHistory() {
+      const list = document.getElementById('history-list');
+      const toggle = document.getElementById('history-toggle');
+      if (list.classList.contains('collapsed')) {
+        list.classList.remove('collapsed');
+        toggle.classList.remove('collapsed');
+      } else {
+        list.classList.add('collapsed');
+        toggle.classList.add('collapsed');
+      }
+    }
+
+    // ===== MEDICATION MODAL FUNCTIONS =====
+
+    async function openMedModal(medicationId) {
+      try {
+        const res = await fetch(`${API_BASE}/api/medications?id=${medicationId}`);
+        const data = await res.json();
+
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+
+        currentMedication = data.medication;
+
+        // Populate modal fields
+        document.getElementById('modal-title').textContent = currentMedication.name;
+        document.getElementById('modal-med-name').textContent = currentMedication.name;
+        document.getElementById('modal-med-dose').textContent = currentMedication.dose;
+        document.getElementById('modal-med-location').textContent = currentMedication.location;
+
+        if (currentMedication.notes) {
+          document.getElementById('modal-notes-row').style.display = 'flex';
+          document.getElementById('modal-med-notes').textContent = currentMedication.notes;
+        } else {
+          document.getElementById('modal-notes-row').style.display = 'none';
+        }
+
+        // Set frequency (disable for tapering meds)
+        const freqSelect = document.getElementById('modal-frequency');
+        const isTapering = currentMedication.frequency === 'tapering';
+
+        if (isTapering) {
+          freqSelect.innerHTML = '<option value="tapering">Tapering Schedule</option>';
+          freqSelect.disabled = true;
+        } else {
+          freqSelect.innerHTML = `
+            <option value="4x_daily">4x Daily</option>
+            <option value="2x_daily">2x Daily</option>
+            <option value="1x_daily">1x Daily</option>
+            <option value="12h">Every 12 Hours</option>
+          `;
+          freqSelect.disabled = false;
+          freqSelect.value = currentMedication.effectiveSchedule?.frequency || currentMedication.frequency;
+        }
+
+        // Set active toggle
+        document.getElementById('modal-active').checked = currentMedication.effectiveSchedule?.active ?? currentMedication.active;
+
+        // Update time slots display
+        updateTimeSlots();
+
+        // Show modal
+        document.getElementById('med-modal').classList.add('active');
+      } catch (err) {
+        console.error('Error loading medication:', err);
+        alert('Error loading medication details');
+      }
+    }
+
+    function closeMedModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('med-modal').classList.remove('active');
+      currentMedication = null;
+    }
+
+    function updateTimeSlots() {
+      const frequency = document.getElementById('modal-frequency').value;
+      const slotsContainer = document.getElementById('modal-time-slots');
+
+      let slots;
+      if (frequency === 'tapering' && currentMedication?.tapering) {
+        // Show tapering info
+        slotsContainer.innerHTML = `
+          <div style="font-size: 0.85rem; color: #666;">
+            Day 1: Morning, Midday, Evening<br>
+            Day 2: Morning, Evening<br>
+            Day 3+: Morning only
+          </div>
+        `;
+        return;
+      }
+
+      slots = FREQUENCY_SLOTS[frequency] || [];
+      slotsContainer.innerHTML = slots.map(slot =>
+        `<span class="time-slot-badge">${TIME_SLOT_LABELS[slot]}</span>`
+      ).join('');
+    }
+
+    async function saveSchedule() {
+      if (!currentMedication) return;
+
+      const saveBtn = document.getElementById('modal-save-btn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+
+      try {
+        const frequency = document.getElementById('modal-frequency').value;
+        const active = document.getElementById('modal-active').checked;
+
+        const res = await fetch(`${API_BASE}/api/medications`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: currentMedication.id,
+            frequency: frequency !== 'tapering' ? frequency : undefined,
+            active
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.updated) {
+          closeMedModal();
+          loadSchedule(); // Refresh the schedule display
+        } else {
+          alert(data.error || 'Failed to save schedule');
+        }
+      } catch (err) {
+        console.error('Error saving schedule:', err);
+        alert('Error saving schedule');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Changes';
+      }
+    }
+
+    async function resetToDefault() {
+      if (!currentMedication) return;
+
+      if (!confirm(`Reset ${currentMedication.name} to its default schedule?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/medications?id=${currentMedication.id}`, {
+          method: 'DELETE'
+        });
+
+        const data = await res.json();
+
+        if (data.reset) {
+          closeMedModal();
+          loadSchedule();
+        }
+      } catch (err) {
+        console.error('Error resetting schedule:', err);
+        alert('Error resetting schedule');
       }
     }
 
@@ -553,13 +1338,27 @@
                               med.location.includes('RIGHT') ? 'right-eye' : 'oral';
               const locIcon = med.location.includes('eye') ? '👁️' : '💊';
 
+              // Check if this medication has been confirmed
+              const confirmKey = `${slot}-${med.id}`;
+              const confirmedAt = confirmedMeds.get(confirmKey);
+              const isConfirmed = !!confirmedAt;
+              const confirmedClass = isConfirmed ? ' confirmed' : '';
+              const confirmedTimeHtml = isConfirmed ?
+                `<div class="confirmed-time">✓ Confirmed at ${new Date(confirmedAt).toLocaleTimeString('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                  timeZone: 'America/Los_Angeles'
+                })}</div>` : '';
+
               html += `
-                <li class="med-item ${locClass}">
+                <li class="med-item ${locClass}${confirmedClass} clickable" onclick="openMedModal('${med.id}')">
                   <span class="med-icon">${locIcon}</span>
                   <div class="med-details">
                     <div class="med-name">${med.name}</div>
                     <div class="med-dose">${med.location} • ${med.dose}</div>
                     ${med.notes ? `<div class="med-notes">${med.notes}</div>` : ''}
+                    ${confirmedTimeHtml}
                   </div>
                 </li>
               `;
