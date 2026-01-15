@@ -79,7 +79,7 @@ export async function sendMessenger(message) {
 }
 
 // Verify webhook signature from Facebook
-export function verifySignature(signature, payload, appSecret) {
+export async function verifySignature(signature, payload, appSecret) {
   if (!signature || !appSecret) return false;
 
   const crypto = await import('crypto');
