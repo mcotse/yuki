@@ -22,12 +22,14 @@ export function getCurrentTimeSlot(date = new Date()) {
   const minutes = localDate.getMinutes();
   const currentTime = hours * 60 + minutes;
 
-  // Define windows around each time slot (30 min before to 30 min after)
+  // Define windows around each time slot
   const slots = [
-    { name: 'MORNING', time: 8 * 60 + 30 },   // 8:30
-    { name: 'MIDDAY', time: 14 * 60 },         // 14:00
-    { name: 'EVENING', time: 19 * 60 },        // 19:00
-    { name: 'NIGHT', time: 24 * 60 }           // 00:00 (midnight)
+    { name: 'MORNING', time: 8 * 60 + 30 },      // 8:30
+    { name: 'LATE_MORNING', time: 11 * 60 },     // 11:00
+    { name: 'MIDDAY', time: 14 * 60 },           // 14:00
+    { name: 'EVENING', time: 19 * 60 },          // 19:00
+    { name: 'LATE_NIGHT', time: 23 * 60 },       // 23:00
+    { name: 'NIGHT', time: 24 * 60 }             // 00:00 (midnight)
   ];
 
   for (const slot of slots) {
@@ -95,8 +97,10 @@ function formatTime(hours, minutes) {
 function getStaggeredTime(slotName, staggerIndex) {
   const baseTimes = {
     MORNING: { hours: 8, minutes: 30 },
+    LATE_MORNING: { hours: 11, minutes: 0 },
     MIDDAY: { hours: 14, minutes: 0 },
     EVENING: { hours: 19, minutes: 0 },
+    LATE_NIGHT: { hours: 23, minutes: 0 },
     NIGHT: { hours: 0, minutes: 0 }
   };
 
@@ -221,8 +225,10 @@ export function formatSmsMessage(dueInfo) {
 
   const slotNames = {
     MORNING: '🌅 Morning',
+    LATE_MORNING: '🕚 Late Morning',
     MIDDAY: '☀️ Midday',
     EVENING: '🌆 Evening',
+    LATE_NIGHT: '🌃 Late Night',
     NIGHT: '🌙 Night'
   };
 
@@ -262,15 +268,18 @@ export function getMedicationsForSlot(slot, date = new Date()) {
 
 // Preview full day schedule
 export function getDaySchedule(date = new Date()) {
-  const slots = ['MORNING', 'MIDDAY', 'EVENING', 'NIGHT'];
+  const slots = ['MORNING', 'LATE_MORNING', 'MIDDAY', 'EVENING', 'LATE_NIGHT', 'NIGHT'];
   const schedule = {};
 
   for (const slot of slots) {
     const meds = getMedicationsForSlot(slot, date);
-    schedule[slot] = {
-      time: TIME_SLOTS[slot],
-      medications: meds
-    };
+    // Only include slots that have medications
+    if (meds.length > 0) {
+      schedule[slot] = {
+        time: TIME_SLOTS[slot],
+        medications: meds
+      };
+    }
   }
 
   return {

@@ -782,13 +782,16 @@
       '4x_daily': ['MORNING', 'MIDDAY', 'EVENING', 'NIGHT'],
       '2x_daily': ['MORNING', 'EVENING'],
       '1x_daily': ['MORNING'],
-      '12h': ['MORNING', 'EVENING']
+      '12h': ['MORNING', 'EVENING'],
+      '12h_11': ['LATE_MORNING', 'LATE_NIGHT']
     };
 
     const TIME_SLOT_LABELS = {
       MORNING: '8:30 AM',
+      LATE_MORNING: '11:00 AM',
       MIDDAY: '2:00 PM',
       EVENING: '7:00 PM',
+      LATE_NIGHT: '11:00 PM',
       NIGHT: '12:00 AM'
     };
 
@@ -885,10 +888,12 @@
 
     // Slot times for comparison (in 24h format)
     const SLOT_HOURS = {
-      MORNING: 8.5,   // 8:30 AM
-      MIDDAY: 14,     // 2:00 PM
-      EVENING: 19,    // 7:00 PM
-      NIGHT: 24       // 12:00 AM (next day)
+      MORNING: 8.5,       // 8:30 AM
+      LATE_MORNING: 11,   // 11:00 AM
+      MIDDAY: 14,         // 2:00 PM
+      EVENING: 19,        // 7:00 PM
+      LATE_NIGHT: 23,     // 11:00 PM
+      NIGHT: 24           // 12:00 AM (next day)
     };
 
     function updateClock() {
@@ -909,14 +914,16 @@
       const currentHour = pstNow.getHours() + pstNow.getMinutes() / 60;
 
       if (currentHour < SLOT_HOURS.MORNING) return 'BEFORE_MORNING';
-      if (currentHour < SLOT_HOURS.MIDDAY) return 'MORNING';
+      if (currentHour < SLOT_HOURS.LATE_MORNING) return 'MORNING';
+      if (currentHour < SLOT_HOURS.MIDDAY) return 'LATE_MORNING';
       if (currentHour < SLOT_HOURS.EVENING) return 'MIDDAY';
-      if (currentHour < SLOT_HOURS.NIGHT) return 'EVENING';
+      if (currentHour < SLOT_HOURS.LATE_NIGHT) return 'EVENING';
+      if (currentHour < SLOT_HOURS.NIGHT) return 'LATE_NIGHT';
       return 'NIGHT';
     }
 
     function getSlotStatus(slot, currentSlot) {
-      const slotOrder = ['MORNING', 'MIDDAY', 'EVENING', 'NIGHT'];
+      const slotOrder = ['MORNING', 'LATE_MORNING', 'MIDDAY', 'EVENING', 'LATE_NIGHT', 'NIGHT'];
       const slotIndex = slotOrder.indexOf(slot);
       const currentIndex = slotOrder.indexOf(currentSlot);
 
@@ -1288,15 +1295,19 @@
         const content = document.getElementById('schedule-content');
         const slotEmojis = {
           MORNING: '🌅',
+          LATE_MORNING: '🕚',
           MIDDAY: '☀️',
           EVENING: '🌆',
+          LATE_NIGHT: '🌃',
           NIGHT: '🌙'
         };
 
         const slotNames = {
           MORNING: 'Morning',
+          LATE_MORNING: 'Late Morning',
           MIDDAY: 'Midday',
           EVENING: 'Evening',
+          LATE_NIGHT: 'Late Night',
           NIGHT: 'Night'
         };
 

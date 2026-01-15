@@ -7,8 +7,10 @@ export const SURGERY_DATE = new Date('2026-01-12T12:00:00-08:00');
 // Time slots for medication reminders (in 24h format)
 export const TIME_SLOTS = {
   MORNING: '08:30',
+  LATE_MORNING: '11:00',
   MIDDAY: '14:00',
   EVENING: '19:00',
+  LATE_NIGHT: '23:00',
   NIGHT: '00:00'
 };
 
@@ -17,7 +19,8 @@ export const FREQUENCY_SLOTS = {
   '4x_daily': ['MORNING', 'MIDDAY', 'EVENING', 'NIGHT'],
   '2x_daily': ['MORNING', 'EVENING'],
   '1x_daily': ['MORNING'],
-  '12h': ['MORNING', 'EVENING']
+  '12h': ['MORNING', 'EVENING'],
+  '12h_11': ['LATE_MORNING', 'LATE_NIGHT']  // 11 AM and 11 PM
 };
 
 export const medications = {
@@ -131,13 +134,12 @@ export const medications = {
       id: 'gabapentin',
       name: 'Gabapentin 50mg',
       dose: '1 tablet',
-      frequency: '12h',
+      frequency: '12h_11',
       location: 'ORAL',
-      notes: '💊 As needed for pain. May cause sedation',
+      notes: '💊 For pain. May cause sedation',
       startDate: SURGERY_DATE,
       endDate: null,
-      active: true,
-      asNeeded: true // optional reminder
+      active: true
     }
   ]
 };
