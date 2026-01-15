@@ -254,12 +254,17 @@ export async function getConfirmationHistory(date = new Date()) {
     const keys = [];
 
     // Use SCAN to find all matching keys
-    let cursor = 0;
+    // Note: Upstash returns cursor as string, so compare with "0"
+    let cursor = "0";
+    let iterations = 0;
+    const maxIterations = 10; // Safety limit
+
     do {
       const result = await client.scan(cursor, { match: pattern, count: 100 });
-      cursor = result[0];
+      cursor = String(result[0]);
       keys.push(...result[1]);
-    } while (cursor !== 0);
+      iterations++;
+    } while (cursor !== "0" && iterations < maxIterations);
 
     // Fetch all confirmation data
     const confirmations = [];
