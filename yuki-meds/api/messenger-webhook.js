@@ -24,11 +24,13 @@ export default async function handler(req, res) {
 
     const VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
 
+    console.log(`[Messenger Webhook] Verification attempt - mode: ${mode}, token: ${token}, expected: ${VERIFY_TOKEN}, match: ${token === VERIFY_TOKEN}`);
+
     if (mode === 'subscribe' && token === VERIFY_TOKEN) {
       console.log('[Messenger Webhook] Verification successful');
       return res.status(200).send(challenge);
     } else {
-      console.log('[Messenger Webhook] Verification failed');
+      console.log(`[Messenger Webhook] Verification failed - mode: ${mode}, tokenMatch: ${token === VERIFY_TOKEN}`);
       return res.status(403).send('Verification failed');
     }
   }
