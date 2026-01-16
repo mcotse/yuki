@@ -1,6 +1,7 @@
 // Facebook Messenger webhook endpoint for receiving replies
 // Handles both verification (GET) and incoming messages (POST)
 
+import crypto from 'crypto';
 import { confirmLatestPending, getPendingReminders } from '../src/lib/storage.js';
 import { sendMessenger } from '../src/lib/messenger.js';
 
@@ -10,6 +11,34 @@ const CONFIRMATION_WORDS = [
   'ok', 'okay', 'yep', 'yup', 'confirmed', 'taken', 'gave', 'given',
   'finished', 'did', 'did it', 'y', '👍', '✅', '✓', 'check'
 ];
+
+/**
+ * Validate Facebook webhook signature to ensure request authenticity
+ * @param {string} signature - The X-Hub-Signature-256 header value
+ * @param {string} payload - The raw request body as a string
+ * @param {string} appSecret - The Facebook app secret
+ * @returns {boolean} - Whether the signature is valid
+ */
+function verifyFacebookSignature(signature, payload, appSecret) {
+  if (!signature || !appSecret) return false;
+
+  try {
+    const expectedSignature = crypto
+      .createHmac('sha256', appSecret)
+      .update(payload, 'utf-8')
+      .digest('hex');
+
+    const providedSignature = signature.replace('sha256=', '');
+
+    // Use timing-safe comparison to prevent timing attacks
+    return crypto.timingSafeEqual(
+      Buffer.from(providedSignature, 'hex'),
+      Buffer.from(expectedSignature, 'hex')
+    );
+  } catch {
+    return false;
+  }
+}
 
 export const config = {
   runtime: 'nodejs'
@@ -35,6 +64,19 @@ export default async function handler(req, res) {
 
   // POST request - incoming messages
   if (req.method === 'POST') {
+    // Verify Facebook webhook signature in production
+    const appSecret = process.env.FB_APP_SECRET;
+    if (appSecret) {
+      const signature = req.headers['x-hub-signature-256'];
+      // For Vercel, we need to get the raw body - this may require body parser configuration
+      const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+
+      if (!verifyFacebookSignature(signature, rawBody, appSecret)) {
+        console.error('[Messenger Webhook] Invalid Facebook signature');
+        return res.status(403).json({ error: 'Invalid signature' });
+      }
+    }
+
     const body = req.body;
 
     // Verify this is from a page subscription
@@ -104,7 +146,8 @@ export default async function handler(req, res) {
     } catch (error) {
       console.error('[Messenger Webhook] Error:', error);
       // Still return 200 to prevent Facebook from retrying
-      return res.status(200).json({ status: 'error', message: error.message });
+      // Don't expose internal error details to clients
+      return res.status(200).json({ status: 'error' });
     }
   }
 
@@ -121,9 +164,12 @@ async function sendMessengerReply(psid, message) {
   }
 
   try {
-    const response = await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
+    const response = await fetch('https://graph.facebook.com/v18.0/me/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${PAGE_ACCESS_TOKEN}`
+      },
       body: JSON.stringify({
         recipient: { id: psid },
         message: { text: message }

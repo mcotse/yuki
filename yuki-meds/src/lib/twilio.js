@@ -1,16 +1,18 @@
 import twilio from 'twilio';
+import crypto from 'crypto';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 
-// WhatsApp sandbox number
-const WHATSAPP_SANDBOX = '+14155238886';
+// WhatsApp sandbox number (can be overridden via env)
+const WHATSAPP_SANDBOX = process.env.TWILIO_WHATSAPP_NUMBER || '+14155238886';
 
-// All phone numbers to receive notifications
-const RECIPIENT_NUMBERS = [
-  '+18573008938',
-  '+13014615385'
-];
+// All phone numbers to receive notifications (from environment variable)
+// Format: comma-separated list of phone numbers
+const RECIPIENT_NUMBERS = (process.env.TWILIO_RECIPIENT_NUMBERS || '')
+  .split(',')
+  .map(n => n.trim())
+  .filter(Boolean);
 
 let client = null;
 
@@ -82,5 +84,44 @@ export async function sendMedicationReminder(formattedMessage) {
       sent: false,
       error: error.message
     };
+  }
+}
+
+/**
+ * Validate Twilio webhook signature to ensure request authenticity
+ * Uses HMAC-SHA1 as per Twilio's specification
+ * @param {string} signature - The X-Twilio-Signature header value
+ * @param {string} url - The full URL of the webhook endpoint
+ * @param {object} params - The POST body parameters
+ * @returns {boolean} - Whether the signature is valid
+ */
+export function validateTwilioSignature(signature, url, params) {
+  if (!signature || !authToken) {
+    return false;
+  }
+
+  // Build the data string: URL + sorted params
+  let data = url;
+  if (params && typeof params === 'object') {
+    const sortedKeys = Object.keys(params).sort();
+    for (const key of sortedKeys) {
+      data += key + params[key];
+    }
+  }
+
+  // Calculate expected signature
+  const expectedSignature = crypto
+    .createHmac('sha1', authToken)
+    .update(data, 'utf-8')
+    .digest('base64');
+
+  // Use timing-safe comparison to prevent timing attacks
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expectedSignature)
+    );
+  } catch {
+    return false;
   }
 }

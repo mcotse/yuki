@@ -29,10 +29,12 @@ export async function sendMessenger(message) {
     try {
       console.log(`[Messenger ${timestamp}] Attempting send to PSID ${psid}...`);
 
-      const response = await fetch(`${MESSENGER_API_URL}?access_token=${PAGE_ACCESS_TOKEN}`, {
+      // Use Authorization header instead of query param to avoid token logging
+      const response = await fetch(MESSENGER_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${PAGE_ACCESS_TOKEN}`
         },
         body: JSON.stringify({
           recipient: { id: psid },

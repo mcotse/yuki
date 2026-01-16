@@ -1,18 +1,25 @@
 // API endpoint to get pending reminders and confirmation history
 
 import { getPendingReminders, confirmLatestPending, confirmById, clearPending, dedupePendingReminders, cleanupCorruptedReminders, getConfirmationHistory } from '../src/lib/storage.js';
+import { setCorsHeaders, validateApiKey, isProduction } from '../src/lib/auth.js';
 
 export const config = {
   runtime: 'nodejs'
 };
 
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, PATCH, OPTIONS');
+  // Set secure CORS headers
+  setCorsHeaders(req, res, ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS']);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Require authentication for write operations in production
+  if (['POST', 'DELETE', 'PATCH'].includes(req.method)) {
+    if (isProduction() && !validateApiKey(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
   }
 
   if (req.method === 'GET') {

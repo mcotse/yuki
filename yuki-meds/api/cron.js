@@ -4,16 +4,26 @@
 import { getIndividualReminders, getCurrentTimeSlot } from '../src/lib/scheduler.js';
 import { sendNotification } from '../src/lib/notifications.js';
 import { addPendingReminders, markRemindersSent, getRemindersToResend, getPendingReminders, claimSlot } from '../src/lib/storage.js';
+import { isProduction } from '../src/lib/auth.js';
 
 export const config = {
   runtime: 'nodejs'
 };
 
 export default async function handler(req, res) {
-  // Verify cron secret in production
-  if (process.env.CRON_SECRET) {
+  // CRON_SECRET is required in production to prevent unauthorized cron triggers
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (isProduction() && !cronSecret) {
+    console.error('[Cron] CRON_SECRET not configured in production');
+    return res.status(500).json({ error: 'Server misconfiguration' });
+  }
+
+  // Verify cron secret
+  if (cronSecret) {
     const authHeader = req.headers.authorization;
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      console.warn('[Cron] Unauthorized access attempt');
       return res.status(401).json({ error: 'Unauthorized' });
     }
   }

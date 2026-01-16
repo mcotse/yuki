@@ -2,7 +2,7 @@
 // Receives confirmation messages and marks medications as done
 
 import { confirmLatestPending, getPendingReminders } from '../src/lib/storage.js';
-import { sendWhatsApp } from '../src/lib/twilio.js';
+import { sendWhatsApp, validateTwilioSignature } from '../src/lib/twilio.js';
 
 // Words that count as confirmation
 const CONFIRMATION_WORDS = [
@@ -22,6 +22,17 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Validate Twilio webhook signature in production
+    if (process.env.TWILIO_AUTH_TOKEN) {
+      const signature = req.headers['x-twilio-signature'];
+      const url = `https://${req.headers.host}${req.url}`;
+
+      if (!validateTwilioSignature(signature, url, req.body)) {
+        console.error('[Webhook] Invalid Twilio signature');
+        return res.status(403).json({ error: 'Invalid signature' });
+      }
+    }
+
     // Parse Twilio webhook payload
     const body = req.body || {};
     const messageBody = (body.Body || '').toLowerCase().trim();
@@ -82,6 +93,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('[Webhook] Error:', error);
-    return res.status(500).json({ error: error.message });
+    // Don't expose internal error details to clients
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
