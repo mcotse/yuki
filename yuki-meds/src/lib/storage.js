@@ -2,10 +2,17 @@
 // Uses Upstash Redis in production, in-memory for local dev
 
 import { Redis } from '@upstash/redis';
+import { formatInTimeZone } from 'date-fns-tz';
 
 const PENDING_KEY = 'yuki:pending';
 const CONFIRMED_PREFIX = 'yuki:confirmed:';
 const SCHEDULE_PREFIX = 'yuki:schedule:';
+const TIMEZONE = 'America/Los_Angeles';
+
+// Get today's date string in Pacific timezone (YYYY-MM-DD)
+function getTodayDateString(date = new Date()) {
+  return formatInTimeZone(date, TIMEZONE, 'yyyy-MM-dd');
+}
 
 // Check if we're in production with Upstash credentials
 const hasUpstash = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -82,8 +89,8 @@ export async function confirmMedication(medicationId, slot, medication = null) {
     const updated = pending.filter(r => !(r.medicationId === medicationId && r.slot === slot));
     await client.set(PENDING_KEY, updated, { ex: 86400 });
 
-    // Store confirmation with timestamp and medication details
-    const today = new Date().toISOString().split('T')[0];
+    // Store confirmation with timestamp and medication details (use Pacific timezone)
+    const today = getTodayDateString();
     const confirmationData = {
       confirmedAt,
       medicationId,
@@ -137,8 +144,8 @@ export async function confirmById(reminderId) {
   if (client) {
     await client.set(PENDING_KEY, updated, { ex: 86400 });
 
-    // Store confirmation with timestamp and medication details
-    const today = new Date().toISOString().split('T')[0];
+    // Store confirmation with timestamp and medication details (use Pacific timezone)
+    const today = getTodayDateString();
     const key = `${reminder.slot}-${reminder.medicationId}`;
     const confirmationData = {
       confirmedAt,
@@ -175,7 +182,7 @@ export async function getRemindersToResend(minutesThreshold = 30) {
 // Atomically claim a slot to prevent duplicate sends (uses SETNX)
 // Returns true if this invocation claimed the slot, false if already claimed
 export async function claimSlot(slot, date = new Date()) {
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = getTodayDateString(date);
   const key = `yuki:sent:${dateStr}:${slot}`;
 
   const client = getRedis();
@@ -277,9 +284,9 @@ export async function cleanupCorruptedReminders() {
   return { before: pending.length, after: valid.length, removed };
 }
 
-// Get confirmation history for a specific date
+// Get confirmation history for a specific date (in Pacific timezone)
 export async function getConfirmationHistory(date = new Date()) {
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = getTodayDateString(date);
   const client = getRedis();
 
   if (client) {
