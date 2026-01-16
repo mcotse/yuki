@@ -1355,7 +1355,7 @@
               <li class="${itemClass}">
                 <div class="pending-info">
                   <div class="pending-name">${r.medication}</div>
-                  <div class="pending-meta">${r.location} • ${r.dose} • ${r.scheduledTime}</div>
+                  <div class="pending-meta">${r.location || ''} ${r.dose ? '• ' + r.dose : ''} ${r.scheduledTime ? '• ' + r.scheduledTime : ''}</div>
                   ${r.ageMinutes !== null ? `<div class="pending-meta">Sent ${r.ageMinutes}m ago</div>` : ''}
                   ${warningHtml}
                 </div>
@@ -1370,16 +1370,19 @@
           }
         }
 
-        // Add confirmation history section
-        if (confirmationHistory.length > 0) {
+        // Add confirmation history section - only show items from last 4 hours
+        const fourHoursAgo = Date.now() - (4 * 60 * 60 * 1000);
+        const recentConfirmations = confirmationHistory.filter(c => c.confirmedAt > fourHoursAgo);
+
+        if (recentConfirmations.length > 0) {
           historyHtml = `
             <div class="history-section">
               <div class="history-header" onclick="toggleHistory()">
-                <h3>✅ Recently Confirmed (${confirmationHistory.length})</h3>
+                <h3>✅ Recently Confirmed (${recentConfirmations.length})</h3>
                 <span id="history-toggle" class="history-toggle">▼</span>
               </div>
               <ul id="history-list" class="history-list">
-                ${confirmationHistory.slice(0, 10).map(c => `
+                ${recentConfirmations.slice(0, 10).map(c => `
                   <li class="history-item">
                     <span class="check-icon">✓</span>
                     <div class="med-info">

@@ -1,6 +1,6 @@
 // API endpoint to get pending reminders and confirmation history
 
-import { getPendingReminders, confirmLatestPending, confirmById, clearPending, dedupePendingReminders, getConfirmationHistory } from '../src/lib/storage.js';
+import { getPendingReminders, confirmLatestPending, confirmById, clearPending, dedupePendingReminders, cleanupCorruptedReminders, getConfirmationHistory } from '../src/lib/storage.js';
 
 export const config = {
   runtime: 'nodejs'
@@ -51,9 +51,9 @@ export default async function handler(req, res) {
       reminders: pending.map(r => ({
         id: r.id,
         medicationId: r.medicationId,
-        medication: r.medication.name,
-        location: r.medication.location,
-        dose: r.medication.dose,
+        medication: r.medication?.name || r.medicationId,
+        location: r.medication?.location,
+        dose: r.medication?.dose,
         scheduledTime: r.scheduledTime,
         slot: r.slot,
         sentAt: r.sentAt,
@@ -84,7 +84,15 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'PATCH') {
-    // Deduplicate pending reminders
+    const { action } = req.body || {};
+
+    // Cleanup corrupted reminders (missing medication data)
+    if (action === 'cleanup') {
+      const result = await cleanupCorruptedReminders();
+      return res.status(200).json(result);
+    }
+
+    // Default: deduplicate pending reminders
     const result = await dedupePendingReminders();
     return res.status(200).json(result);
   }

@@ -242,6 +242,41 @@ export async function dedupePendingReminders() {
   return { before: pending.length, after: deduped.length, removed };
 }
 
+// Clean up pending reminders with missing or corrupted medication data
+export async function cleanupCorruptedReminders() {
+  const pending = await getPendingReminders();
+
+  // Filter out reminders that are missing medication object or have invalid structure
+  const valid = pending.filter(r => {
+    // Must have medication object with name
+    if (!r.medication || !r.medication.name) {
+      console.log(`[Storage] Removing corrupted reminder: ${r.id} (missing medication)`);
+      return false;
+    }
+    // Must have required fields
+    if (!r.medicationId || !r.slot) {
+      console.log(`[Storage] Removing corrupted reminder: ${r.id} (missing required fields)`);
+      return false;
+    }
+    return true;
+  });
+
+  const removed = pending.length - valid.length;
+
+  if (removed > 0) {
+    console.log(`[Storage] Cleanup: removed ${removed} corrupted reminders, ${valid.length} remaining`);
+
+    const client = getRedis();
+    if (client) {
+      await client.set(PENDING_KEY, valid, { ex: 86400 });
+    } else {
+      memoryStore.pending = valid;
+    }
+  }
+
+  return { before: pending.length, after: valid.length, removed };
+}
+
 // Get confirmation history for a specific date
 export async function getConfirmationHistory(date = new Date()) {
   const dateStr = date.toISOString().split('T')[0];
