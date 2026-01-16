@@ -155,9 +155,27 @@
     }
 
     .confirmed-time {
-      font-size: 0.75rem;
+      font-size: 0.85rem;
       color: #28a745;
-      margin-top: 4px;
+      margin-top: 6px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .confirmed-time::before {
+      content: '✓';
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      background: #28a745;
+      color: white;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: bold;
     }
 
     .med-item.confirmed {
@@ -1355,7 +1373,7 @@
               const isConfirmed = !!confirmedAt;
               const confirmedClass = isConfirmed ? ' confirmed' : '';
               const confirmedTimeHtml = isConfirmed ?
-                `<div class="confirmed-time">✓ Confirmed at ${new Date(confirmedAt).toLocaleTimeString('en-US', {
+                `<div class="confirmed-time">Confirmed at ${new Date(confirmedAt).toLocaleTimeString('en-US', {
                   hour: 'numeric',
                   minute: '2-digit',
                   hour12: true,
@@ -1392,8 +1410,13 @@
     }
 
     // Load on page load
-    loadPending();
-    loadSchedule();
+    async function init() {
+      // Load confirmation history first, then schedule in parallel with pending
+      await loadConfirmationHistory();
+      loadPending();
+      loadSchedule();
+    }
+    init();
     updateClock();
 
     // Update clock every second
