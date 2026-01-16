@@ -37,9 +37,9 @@ export default async function handler(req, res) {
         const sendResults = await sendNotification(reRemindMsg);
 
         // Log per-recipient results
-        for (const result of sendResults) {
+        for (const result of [...sendResults.whatsapp, ...sendResults.messenger]) {
           if (result.success) {
-            console.log(`[Cron] Re-remind ${reminder.medication.name} -> ${result.to}: sent (${result.sid})`);
+            console.log(`[Cron] Re-remind ${reminder.medication.name} -> ${result.to}: sent`);
           } else {
             console.error(`[Cron] Re-remind ${reminder.medication.name} -> ${result.to}: FAILED - ${result.error}`);
           }
@@ -114,16 +114,19 @@ export default async function handler(req, res) {
       const sendResults = await sendNotification(reminder.message);
 
       // Log per-recipient results
-      for (const result of sendResults) {
+      for (const result of [...sendResults.whatsapp, ...sendResults.messenger]) {
         if (result.success) {
-          console.log(`[Cron] ${reminder.medication.name} -> ${result.to}: sent (${result.sid})`);
+          console.log(`[Cron] ${reminder.medication.name} -> ${result.to}: sent`);
         } else {
           console.error(`[Cron] ${reminder.medication.name} -> ${result.to}: FAILED - ${result.error}`);
         }
       }
 
-      reminder.sentAt = Date.now();
-      sentIds.push(reminder.id);
+      // Only mark as sent if at least one notification succeeded
+      if (sendResults.summary.sent > 0) {
+        reminder.sentAt = Date.now();
+        sentIds.push(reminder.id);
+      }
 
       // Small delay between messages to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 1000));
