@@ -1,19 +1,28 @@
 // API endpoint to get pending reminders and confirmation history
 
 import { getPendingReminders, confirmLatestPending, confirmById, clearPending, dedupePendingReminders, cleanupCorruptedReminders, getConfirmationHistory } from '../src/lib/storage.js';
+import { requireAuth } from '../src/lib/auth.js';
 
 export const config = {
   runtime: 'nodejs'
 };
 
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS - allow credentials for auth cookies
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
+
+  // Require authentication for all methods
+  if (!requireAuth(req, res)) return;
 
   if (req.method === 'GET') {
     // Check if requesting confirmation history

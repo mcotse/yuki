@@ -900,18 +900,176 @@
       font-size: 0.9rem;
       color: #333;
     }
+
+    /* Login Overlay */
+    .login-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+
+    .login-overlay.hidden {
+      display: none;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    .login-card h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .login-card p {
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .login-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .login-input.error {
+      border-color: #dc3545;
+      animation: shake 0.3s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .login-btn:hover {
+      opacity: 0.9;
+    }
+
+    .login-btn:active {
+      transform: scale(0.98);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .login-error {
+      color: #dc3545;
+      font-size: 0.9rem;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .login-error.visible {
+      display: block;
+    }
+
+    /* Main content hidden until auth */
+    .main-content.hidden {
+      display: none;
+    }
+
+    /* Logout button in settings */
+    .logout-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+
+    .logout-btn {
+      width: 100%;
+      padding: 12px;
+      background: #f8f9fa;
+      border: 1px solid #dc3545;
+      border-radius: 8px;
+      color: #dc3545;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover {
+      background: #dc3545;
+      color: white;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <button class="settings-btn" onclick="openSettingsModal()" title="Settings">
-      ⚙️
-    </button>
-    <header>
+  <!-- Login Overlay -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-card">
       <h1>🐕 Yuki Meds</h1>
-      <p>Post-surgery medication tracker</p>
-      <div id="current-time" class="current-time">--:-- --</div>
-    </header>
+      <p>Enter password to continue</p>
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <input
+          type="password"
+          id="login-password"
+          class="login-input"
+          placeholder="Password"
+          autocomplete="current-password"
+          required
+        />
+        <button type="submit" id="login-btn" class="login-btn">
+          Sign In
+        </button>
+        <div id="login-error" class="login-error">
+          Incorrect password. Please try again.
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Content (hidden until authenticated) -->
+  <div id="main-content" class="main-content hidden">
+    <div class="container">
+      <button class="settings-btn" onclick="openSettingsModal()" title="Settings">
+        ⚙️
+      </button>
+      <header>
+        <h1>🐕 Yuki Meds</h1>
+        <p>Post-surgery medication tracker</p>
+        <div id="current-time" class="current-time">--:-- --</div>
+      </header>
 
     <div class="card">
       <h2>⏰ Pending Reminders</h2>
@@ -936,7 +1094,8 @@
         <div class="loading">Loading schedule...</div>
       </div>
     </div>
-  </div>
+    </div>
+  </div><!-- end main-content -->
 
   <!-- Medication Detail Modal -->
   <div id="med-modal" class="modal-overlay" onclick="closeMedModal(event)">
@@ -1071,12 +1230,131 @@
             </p>
           </div>
         </div>
+
+        <!-- Logout Section -->
+        <div id="logout-section" class="logout-section" style="display: none;">
+          <button class="logout-btn" onclick="handleLogout()">
+            Sign Out
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
     const API_BASE = '';
+
+    // ===== AUTHENTICATION =====
+
+    let isAuthenticated = false;
+
+    // Check authentication status
+    async function checkAuth() {
+      try {
+        const res = await fetch(`${API_BASE}/api/auth`, {
+          credentials: 'include'
+        });
+        const data = await res.json();
+
+        if (data.authenticated) {
+          showMainContent();
+          // Show logout button if auth is required
+          if (data.authRequired) {
+            document.getElementById('logout-section').style.display = 'block';
+          }
+          return true;
+        } else {
+          showLoginForm();
+          return false;
+        }
+      } catch (error) {
+        console.error('[Auth] Error checking auth:', error);
+        // On error, show login form to be safe
+        showLoginForm();
+        return false;
+      }
+    }
+
+    // Handle login form submission
+    async function handleLogin(event) {
+      event.preventDefault();
+
+      const passwordInput = document.getElementById('login-password');
+      const loginBtn = document.getElementById('login-btn');
+      const errorDiv = document.getElementById('login-error');
+
+      const password = passwordInput.value;
+
+      if (!password) return;
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Signing in...';
+      errorDiv.classList.remove('visible');
+      passwordInput.classList.remove('error');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/auth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ password })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          isAuthenticated = true;
+          showMainContent();
+          document.getElementById('logout-section').style.display = 'block';
+          // Load data after successful login
+          initApp();
+        } else {
+          passwordInput.classList.add('error');
+          errorDiv.classList.add('visible');
+          passwordInput.value = '';
+          passwordInput.focus();
+        }
+      } catch (error) {
+        console.error('[Auth] Login error:', error);
+        errorDiv.textContent = 'Connection error. Please try again.';
+        errorDiv.classList.add('visible');
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Sign In';
+      }
+    }
+
+    // Handle logout
+    async function handleLogout() {
+      try {
+        await fetch(`${API_BASE}/api/auth`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+      } catch (error) {
+        console.error('[Auth] Logout error:', error);
+      }
+
+      isAuthenticated = false;
+      closeSettingsModal();
+      showLoginForm();
+    }
+
+    // Show login form, hide main content
+    function showLoginForm() {
+      document.getElementById('login-overlay').classList.remove('hidden');
+      document.getElementById('main-content').classList.add('hidden');
+      // Clear password field
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-error').classList.remove('visible');
+    }
+
+    // Show main content, hide login form
+    function showMainContent() {
+      document.getElementById('login-overlay').classList.add('hidden');
+      document.getElementById('main-content').classList.remove('hidden');
+      isAuthenticated = true;
+    }
 
     // Track which slots have pending medications
     let pendingSlots = new Set();
@@ -1259,7 +1537,7 @@
 
     async function loadConfirmationHistory() {
       try {
-        const res = await fetch(`${API_BASE}/api/pending?history`);
+        const res = await fetch(`${API_BASE}/api/pending?history`, { credentials: 'include' });
         const data = await res.json();
         confirmationHistory = data.confirmations || [];
 
@@ -1291,7 +1569,7 @@
       try {
         // Load both pending and history in parallel
         const [pendingRes, _] = await Promise.all([
-          fetch(`${API_BASE}/api/pending`),
+          fetch(`${API_BASE}/api/pending`, { credentials: 'include' }),
           loadConfirmationHistory()
         ]);
         const data = await pendingRes.json();
@@ -1428,7 +1706,7 @@
 
     async function openMedModal(medicationId) {
       try {
-        const res = await fetch(`${API_BASE}/api/medications?id=${medicationId}`);
+        const res = await fetch(`${API_BASE}/api/medications?id=${medicationId}`, { credentials: 'include' });
         const data = await res.json();
 
         if (data.error) {
@@ -1526,6 +1804,7 @@
         const res = await fetch(`${API_BASE}/api/medications`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             id: currentMedication.id,
             frequency: frequency !== 'tapering' ? frequency : undefined,
@@ -1559,7 +1838,8 @@
 
       try {
         const res = await fetch(`${API_BASE}/api/medications?id=${currentMedication.id}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          credentials: 'include'
         });
 
         const data = await res.json();
@@ -1579,6 +1859,7 @@
         const res = await fetch(`${API_BASE}/api/pending`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ id })
         });
         const data = await res.json();
@@ -1604,7 +1885,7 @@
 
       try {
         const url = day ? `${API_BASE}/api/schedule?day=${day}` : `${API_BASE}/api/schedule`;
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'include' });
         const data = await res.json();
 
         const content = document.getElementById('schedule-content');
@@ -1706,21 +1987,31 @@
       }
     }
 
-    // Load on page load
-    async function init() {
+    // Initialize app data (called after auth)
+    async function initApp() {
       // Load confirmation history first, then schedule in parallel with pending
       await loadConfirmationHistory();
       loadPending();
       loadSchedule();
     }
+
+    // Main init - check auth first
+    async function init() {
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      // Check authentication
+      const authenticated = await checkAuth();
+
+      if (authenticated) {
+        initApp();
+        // Auto-refresh pending every 30 seconds (only if authenticated)
+        setInterval(() => {
+          if (isAuthenticated) loadPending();
+        }, 30000);
+      }
+    }
     init();
-    updateClock();
-
-    // Update clock every second
-    setInterval(updateClock, 1000);
-
-    // Auto-refresh pending every 30 seconds
-    setInterval(loadPending, 30000);
 
     // ===== SETTINGS MODAL =====
 
@@ -1847,7 +2138,7 @@
 
         // Get current pending count
         try {
-          const res = await fetch(`${API_BASE}/api/pending`);
+          const res = await fetch(`${API_BASE}/api/pending`, { credentials: 'include' });
           const data = await res.json();
           const count = data.count || 0;
           previewCount.textContent = count > 0 ? count : '3';
@@ -1926,7 +2217,7 @@
       await originalLoadPending();
       // Get current pending count and update badge
       try {
-        const res = await fetch(`${API_BASE}/api/pending`);
+        const res = await fetch(`${API_BASE}/api/pending`, { credentials: 'include' });
         const data = await res.json();
         updateAppBadge(data.count || 0);
       } catch (e) {

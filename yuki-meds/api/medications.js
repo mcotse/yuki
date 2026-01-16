@@ -2,20 +2,28 @@
 
 import { getMedicationSchedule, getAllCustomSchedules, updateMedicationSchedule, resetMedicationSchedule } from '../src/lib/storage.js';
 import { getAllMedications, TIME_SLOTS, FREQUENCY_SLOTS } from '../src/config/medications.js';
+import { requireAuth } from '../src/lib/auth.js';
 
 export const config = {
   runtime: 'nodejs'
 };
 
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS - allow credentials for auth cookies
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
+
+  // Require authentication
+  if (!requireAuth(req, res)) return;
 
   // GET /api/medications - List all medications with their schedules
   // GET /api/medications?id=xyz - Get specific medication details

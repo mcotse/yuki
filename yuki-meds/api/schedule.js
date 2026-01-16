@@ -2,19 +2,28 @@
 
 import { getDaySchedule } from '../src/lib/scheduler.js';
 import { getDayNumber } from '../src/config/medications.js';
+import { requireAuth } from '../src/lib/auth.js';
 
 export const config = {
   runtime: 'nodejs'
 };
 
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS - allow credentials for auth cookies
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
+
+  // Require authentication
+  if (!requireAuth(req, res)) return;
 
   const day = req.query.day ? parseInt(req.query.day) : null;
 
