@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "node src/index.js",
+    "test": "bun test",
+    "test:unit": "bun test src/lib/*.test.js",
+    "test:browser": "bun test tests/browser/*.test.js",
     "test-sms": "node src/test-sms.js",
     "check-schedule": "node src/check-schedule.js"
   },
@@ -15,5 +18,8 @@
     "date-fns-tz": "^3.0.0",
     "dotenv": "^16.0.0",
     "twilio": "^5.0.0"
+  },
+  "devDependencies": {
+    "agent-browser": "^0.5.0"
   }
 }

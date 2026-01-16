@@ -2,8 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Yuki Meds Dashboard</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#667eea">
+  <meta name="msapplication-TileColor" content="#667eea">
+
+  <!-- iOS PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Yuki Meds">
+
+  <!-- iOS Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon.svg">
+  <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167x167.png">
+
+  <!-- iOS Splash Screens -->
+  <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
   <style>
     * {
       box-sizing: border-box;
@@ -681,10 +707,206 @@
         justify-content: center;
       }
     }
+
+    /* Settings Button */
+    .settings-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      font-size: 1.3rem;
+      color: white;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .settings-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .container {
+      position: relative;
+    }
+
+    /* Settings Modal */
+    .settings-section {
+      margin-bottom: 24px;
+    }
+
+    .settings-section h3 {
+      font-size: 1rem;
+      color: #333;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .permission-card {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .permission-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .permission-title {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .permission-status {
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .permission-status.granted {
+      background: #c8e6c9;
+      color: #2e7d32;
+    }
+
+    .permission-status.denied {
+      background: #ffcdd2;
+      color: #c62828;
+    }
+
+    .permission-status.default {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .permission-status.unsupported {
+      background: #e0e0e0;
+      color: #666;
+    }
+
+    .permission-description {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .permission-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .permission-btn.enable {
+      background: #667eea;
+      color: white;
+    }
+
+    .permission-btn.enable:hover {
+      background: #5a6fd6;
+    }
+
+    .permission-btn:disabled {
+      background: #e0e0e0;
+      color: #999;
+      cursor: not-allowed;
+    }
+
+    .pwa-install-banner {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 16px;
+      color: white;
+      margin-bottom: 16px;
+    }
+
+    .pwa-install-banner h4 {
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pwa-install-banner p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-bottom: 12px;
+    }
+
+    .pwa-install-banner ol {
+      font-size: 0.85rem;
+      padding-left: 20px;
+      opacity: 0.9;
+    }
+
+    .pwa-install-banner li {
+      margin-bottom: 4px;
+    }
+
+    .badge-preview {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+      padding: 12px;
+      background: #e8f0fe;
+      border-radius: 8px;
+    }
+
+    .badge-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .badge-count {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #dc3545;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+
+    .badge-info {
+      flex: 1;
+      font-size: 0.9rem;
+      color: #333;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <button class="settings-btn" onclick="openSettingsModal()" title="Settings">
+      ⚙️
+    </button>
     <header>
       <h1>🐕 Yuki Meds</h1>
       <p>Post-surgery medication tracker</p>
@@ -777,6 +999,78 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="resetToDefault()">Reset to Default</button>
         <button class="btn btn-primary" id="modal-save-btn" onclick="saveSchedule()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal-overlay" onclick="closeSettingsModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- PWA Install Banner (shown when not installed) -->
+        <div id="pwa-install-section" class="pwa-install-banner" style="display: none;">
+          <h4>📱 Install App</h4>
+          <p>Add Yuki Meds to your home screen for the best experience with notification badges.</p>
+          <ol>
+            <li>Tap the Share button in Safari</li>
+            <li>Select "Add to Home Screen"</li>
+            <li>Tap "Add" to confirm</li>
+          </ol>
+        </div>
+
+        <div class="settings-section">
+          <h3>🔔 Notifications</h3>
+
+          <div class="permission-card">
+            <div class="permission-header">
+              <span class="permission-title">Push Notifications</span>
+              <span id="notification-status" class="permission-status default">Not Set</span>
+            </div>
+            <p class="permission-description">
+              Receive medication reminders even when the app is closed. Required for notification badges on iOS.
+            </p>
+            <button id="notification-btn" class="permission-btn enable" onclick="requestNotificationPermission()">
+              Enable Notifications
+            </button>
+          </div>
+
+          <!-- Badge Preview -->
+          <div id="badge-section" class="permission-card" style="display: none;">
+            <div class="permission-header">
+              <span class="permission-title">App Badge</span>
+              <span id="badge-status" class="permission-status granted">Active</span>
+            </div>
+            <p class="permission-description">
+              Shows the number of pending medications on the app icon.
+            </p>
+            <div class="badge-preview">
+              <div class="badge-icon">
+                🐕
+                <span id="badge-preview-count" class="badge-count">3</span>
+              </div>
+              <div class="badge-info">
+                Badge shows pending medication count
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>ℹ️ About</h3>
+          <div class="permission-card">
+            <div class="permission-header">
+              <span class="permission-title">Yuki Meds</span>
+              <span class="permission-status default">v1.0</span>
+            </div>
+            <p class="permission-description">
+              Post-surgery medication tracker. Helps manage complex medication schedules with automatic reminders.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1424,6 +1718,218 @@
 
     // Auto-refresh pending every 30 seconds
     setInterval(loadPending, 30000);
+
+    // ===== SETTINGS MODAL =====
+
+    function openSettingsModal() {
+      document.getElementById('settings-modal').classList.add('active');
+      updateNotificationStatus();
+      updatePWAInstallSection();
+      updateBadgeSection();
+    }
+
+    function closeSettingsModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('settings-modal').classList.remove('active');
+    }
+
+    // Check if running as installed PWA
+    function isPWAInstalled() {
+      // Check if running in standalone mode (installed PWA)
+      return window.matchMedia('(display-mode: standalone)').matches ||
+             window.navigator.standalone === true ||
+             document.referrer.includes('android-app://');
+    }
+
+    // Update PWA install section visibility
+    function updatePWAInstallSection() {
+      const section = document.getElementById('pwa-install-section');
+      if (section) {
+        // Show install instructions if not installed as PWA
+        section.style.display = isPWAInstalled() ? 'none' : 'block';
+      }
+    }
+
+    // Update notification permission status
+    function updateNotificationStatus() {
+      const statusEl = document.getElementById('notification-status');
+      const btnEl = document.getElementById('notification-btn');
+
+      if (!('Notification' in window)) {
+        statusEl.textContent = 'Not Supported';
+        statusEl.className = 'permission-status unsupported';
+        btnEl.disabled = true;
+        btnEl.textContent = 'Not Available';
+        return;
+      }
+
+      const permission = Notification.permission;
+
+      switch (permission) {
+        case 'granted':
+          statusEl.textContent = 'Enabled';
+          statusEl.className = 'permission-status granted';
+          btnEl.disabled = true;
+          btnEl.textContent = 'Notifications Enabled';
+          break;
+        case 'denied':
+          statusEl.textContent = 'Blocked';
+          statusEl.className = 'permission-status denied';
+          btnEl.disabled = true;
+          btnEl.textContent = 'Blocked in Settings';
+          break;
+        default:
+          statusEl.textContent = 'Not Set';
+          statusEl.className = 'permission-status default';
+          btnEl.disabled = false;
+          btnEl.textContent = 'Enable Notifications';
+      }
+    }
+
+    // Request notification permission
+    async function requestNotificationPermission() {
+      const btnEl = document.getElementById('notification-btn');
+
+      if (!('Notification' in window)) {
+        alert('Notifications are not supported in this browser.');
+        return;
+      }
+
+      btnEl.disabled = true;
+      btnEl.textContent = 'Requesting...';
+
+      try {
+        const permission = await Notification.requestPermission();
+        console.log('[App] Notification permission:', permission);
+
+        if (permission === 'granted') {
+          // Show a test notification
+          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.ready.then(registration => {
+              registration.showNotification('Yuki Meds', {
+                body: 'Notifications are now enabled! You\'ll receive medication reminders.',
+                icon: '/icons/icon-192x192.png',
+                badge: '/icons/icon-72x72.png',
+                tag: 'welcome-notification'
+              });
+            });
+          } else {
+            new Notification('Yuki Meds', {
+              body: 'Notifications are now enabled! You\'ll receive medication reminders.',
+              icon: '/icons/icon.svg'
+            });
+          }
+        }
+
+        updateNotificationStatus();
+        updateBadgeSection();
+      } catch (error) {
+        console.error('[App] Error requesting notification permission:', error);
+        alert('Could not request notification permission. Please try again.');
+        updateNotificationStatus();
+      }
+    }
+
+    // Update badge section visibility and count
+    async function updateBadgeSection() {
+      const section = document.getElementById('badge-section');
+      const previewCount = document.getElementById('badge-preview-count');
+
+      // Badge requires notification permission on iOS
+      const hasNotificationPermission = 'Notification' in window && Notification.permission === 'granted';
+      const supportsBadge = 'setAppBadge' in navigator;
+
+      if (hasNotificationPermission && supportsBadge) {
+        section.style.display = 'block';
+
+        // Get current pending count
+        try {
+          const res = await fetch(`${API_BASE}/api/pending`);
+          const data = await res.json();
+          const count = data.count || 0;
+          previewCount.textContent = count > 0 ? count : '3';
+          previewCount.style.display = count > 0 ? 'flex' : 'flex'; // Always show for preview
+        } catch (e) {
+          previewCount.textContent = '3';
+        }
+      } else {
+        section.style.display = 'none';
+      }
+    }
+
+    // ===== SERVICE WORKER REGISTRATION =====
+
+    // Register service worker for PWA support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('/sw.js');
+          console.log('[App] Service Worker registered:', registration.scope);
+
+          // Check for updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New version available
+                console.log('[App] New version available');
+              }
+            });
+          });
+        } catch (error) {
+          console.error('[App] Service Worker registration failed:', error);
+        }
+      });
+    }
+
+    // ===== BADGE API INTEGRATION =====
+
+    // Update app badge when pending count changes
+    async function updateAppBadge(count) {
+      try {
+        if ('setAppBadge' in navigator) {
+          if (count > 0) {
+            await navigator.setAppBadge(count);
+          } else {
+            await navigator.clearAppBadge();
+          }
+        }
+        // Also notify service worker
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'UPDATE_BADGE',
+            data: { count }
+          });
+        }
+      } catch (error) {
+        console.warn('[App] Badge update failed:', error);
+      }
+    }
+
+    // Clear badge when all medications are confirmed
+    async function clearAppBadge() {
+      try {
+        if ('clearAppBadge' in navigator) {
+          await navigator.clearAppBadge();
+        }
+      } catch (error) {
+        console.warn('[App] Badge clear failed:', error);
+      }
+    }
+
+    // Enhance loadPending to update badge
+    const originalLoadPending = loadPending;
+    loadPending = async function() {
+      await originalLoadPending();
+      // Get current pending count and update badge
+      try {
+        const res = await fetch(`${API_BASE}/api/pending`);
+        const data = await res.json();
+        updateAppBadge(data.count || 0);
+      } catch (e) {
+        // Silently fail badge update
+      }
+    };
   </script>
 </body>
 </html>
