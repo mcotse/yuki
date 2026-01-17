@@ -4,8 +4,8 @@
   "description": "Care tracker for Yuki",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#6B7280",
-  "theme_color": "#6B7280",
+  "background_color": "#C9A86C",
+  "theme_color": "#C9A86C",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [
