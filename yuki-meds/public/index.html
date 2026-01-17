@@ -866,6 +866,37 @@
       cursor: not-allowed;
     }
 
+    .early-confirm-btn {
+      padding: 4px 10px;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: background 0.2s;
+      margin-left: auto;
+    }
+
+    .early-confirm-btn:hover {
+      background: #5a6268;
+    }
+
+    .early-confirm-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .early-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #6c757d;
+      color: white;
+      margin-left: 6px;
+    }
+
     .empty-state {
       text-align: center;
       padding: 40px;
@@ -1826,7 +1857,7 @@
       LATE_MORNING: '11:00 AM',
       MIDDAY: '2:00 PM',
       EVENING: '7:00 PM',
-      LATE_NIGHT: '11:00 PM',
+      LATE_NIGHT: '10:30 PM',
       NIGHT: '12:00 AM'
     };
 
@@ -1927,7 +1958,7 @@
       LATE_MORNING: 11,   // 11:00 AM
       MIDDAY: 14,         // 2:00 PM
       EVENING: 19,        // 7:00 PM
-      LATE_NIGHT: 23,     // 11:00 PM
+      LATE_NIGHT: 22.5,   // 10:30 PM
       NIGHT: 24           // 12:00 AM (next day)
     };
 
@@ -2320,6 +2351,35 @@
       }
     }
 
+    // Early confirmation - confirm medication before scheduled reminder time
+    async function confirmEarly(medicationId, slot, medName, medLocation, medDose) {
+      try {
+        const res = await fetch(`${API_BASE}/api/pending`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            medicationId,
+            slot,
+            medication: { name: medName, location: medLocation, dose: medDose }
+          })
+        });
+        const data = await res.json();
+
+        if (data.confirmed) {
+          // Refresh both pending and schedule to show the confirmation
+          await loadConfirmationHistory();
+          loadPending();
+          loadSchedule();
+        } else {
+          alert(`⚠️ ${data.message || 'Could not confirm early'}`);
+        }
+      } catch (err) {
+        console.error('Error confirming early:', err);
+        alert('Error confirming medication');
+      }
+    }
+
     async function loadSchedule(day = null) {
       try {
         const url = day ? `${API_BASE}/api/schedule?day=${day}` : `${API_BASE}/api/schedule`;
@@ -2392,13 +2452,25 @@
               const confirmedAt = confirmedMeds.get(confirmKey);
               const isConfirmed = !!confirmedAt;
               const confirmedClass = isConfirmed ? ' confirmed' : '';
+
+              // Check if this was an early confirmation
+              const earlyConfirmation = confirmationHistory.find(c =>
+                c.medicationId === med.id && c.slot === slot && c.early
+              );
+              const earlyBadgeHtml = earlyConfirmation ? '<span class="early-badge">Early</span>' : '';
+
               const confirmedTimeHtml = isConfirmed ?
                 `<div class="confirmed-time">Confirmed at ${new Date(confirmedAt).toLocaleTimeString('en-US', {
                   hour: 'numeric',
                   minute: '2-digit',
                   hour12: true,
                   timeZone: 'America/Los_Angeles'
-                })}</div>` : '';
+                })}${earlyBadgeHtml}</div>` : '';
+
+              // Show early confirm button for upcoming/current slots that aren't confirmed yet (only for today)
+              const showEarlyConfirm = isToday && !isConfirmed && status !== 'past';
+              const earlyConfirmBtnHtml = showEarlyConfirm ?
+                `<button class="early-confirm-btn" onclick="event.stopPropagation(); confirmEarly('${med.id}', '${slot}', '${med.name.replace(/'/g, "\\'")}', '${med.location}', '${med.dose}')">Confirm</button>` : '';
 
               html += `
                 <li class="med-item ${locClass}${confirmedClass} clickable" onclick="openMedModal('${med.id}')">
@@ -2409,6 +2481,7 @@
                     ${med.notes ? `<div class="med-notes">${med.notes}</div>` : ''}
                     ${confirmedTimeHtml}
                   </div>
+                  ${earlyConfirmBtnHtml}
                 </li>
               `;
             }

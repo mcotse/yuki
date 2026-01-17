@@ -1,6 +1,6 @@
 // API endpoint to get pending reminders and confirmation history
 
-import { getPendingReminders, confirmLatestPending, confirmById, clearPending, dedupePendingReminders, cleanupCorruptedReminders, getConfirmationHistory } from '../src/lib/storage.js';
+import { getPendingReminders, confirmLatestPending, confirmById, clearPending, dedupePendingReminders, cleanupCorruptedReminders, getConfirmationHistory, confirmEarly, isAlreadyConfirmed } from '../src/lib/storage.js';
 import { requireAuth } from '../src/lib/auth.js';
 
 export const config = {
@@ -43,6 +43,7 @@ export default async function handler(req, res) {
           dose: c.medication?.dose,
           slot: c.slot,
           confirmedAt: c.confirmedAt,
+          early: c.early || false,  // Include early confirmation flag
           confirmedAtFormatted: new Date(c.confirmedAt).toLocaleTimeString('en-US', {
             hour: 'numeric',
             minute: '2-digit',
@@ -72,16 +73,34 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    // If ID provided, confirm that specific reminder (from dashboard)
-    // Otherwise confirm oldest (from WhatsApp reply)
-    const { id } = req.body || {};
+    // Three modes:
+    // 1. id: Confirm specific pending reminder (from dashboard)
+    // 2. medicationId + slot: Early confirm (before reminder is sent)
+    // 3. Neither: Confirm oldest pending (from WhatsApp reply)
+    const { id, medicationId, slot, medication } = req.body || {};
 
+    // Mode 1: Confirm by pending reminder ID
     if (id) {
       const result = await confirmById(id);
       return res.status(200).json(result);
     }
 
-    // Fallback for WhatsApp replies without ID
+    // Mode 2: Early confirmation - confirm medication+slot before reminder is sent
+    if (medicationId && slot) {
+      // Check if already confirmed
+      const alreadyConfirmed = await isAlreadyConfirmed(medicationId, slot);
+      if (alreadyConfirmed) {
+        return res.status(200).json({
+          confirmed: false,
+          message: `${medicationId} already confirmed for ${slot}`
+        });
+      }
+
+      const result = await confirmEarly(medicationId, slot, medication);
+      return res.status(200).json(result);
+    }
+
+    // Mode 3: Fallback for WhatsApp replies without ID
     const result = await confirmLatestPending();
     return res.status(200).json(result);
   }
