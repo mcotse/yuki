@@ -55,9 +55,24 @@
       margin-bottom: 30px;
     }
 
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .header-photo {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.8);
+    }
+
     header h1 {
       font-size: 2.5rem;
-      margin-bottom: 10px;
+      margin-bottom: 0;
     }
 
     header p {
@@ -1182,6 +1197,16 @@
       text-align: center;
     }
 
+    .login-photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 16px;
+      border: 4px solid #6B7280;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
     .login-card h1 {
       font-size: 2rem;
       margin-bottom: 8px;
@@ -1320,13 +1345,26 @@
     .card.collapsed .card-header {
       margin-bottom: 0;
     }
+
+    /* Visual indicator for collapsed pending with items */
+    #pending-card.collapsed.has-pending {
+      border-left: 4px solid #ef4444;
+      background: linear-gradient(90deg, rgba(239,68,68,0.08) 0%, white 20%);
+    }
+
+    #pending-card.collapsed.has-pending .card-header h2::after {
+      content: ' (!)';
+      color: #ef4444;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <!-- Login Overlay -->
   <div id="login-overlay" class="login-overlay">
     <div class="login-card">
-      <h1>🐕 Yuki Dashboard</h1>
+      <img src="/images/yuki-login.jpg" alt="Yuki" class="login-photo">
+      <h1>Yuki Dashboard</h1>
       <p>Enter password to continue</p>
       <form id="login-form" onsubmit="handleLogin(event)">
         <input
@@ -1354,7 +1392,10 @@
         ⚙️
       </button>
       <header>
-        <h1>🐕 Yuki Dashboard</h1>
+        <div class="header-content">
+          <img src="/images/yuki-avatar.jpg" alt="Yuki" class="header-photo">
+          <h1>Yuki Dashboard</h1>
+        </div>
         <div id="current-time" class="current-time">--:-- --</div>
       </header>
 
@@ -2317,23 +2358,32 @@
         list.innerHTML = pendingHtml + historyHtml;
 
         // Auto-collapse/expand Pending Reminders based on count
-        // Only auto-change if user hasn't manually set a preference this session
         const pendingContent = document.getElementById('pending-content');
         const pendingToggle = document.getElementById('pending-toggle');
         const pendingCard = document.getElementById('pending-card');
         const userSetPending = localStorage.getItem('card-pending-collapsed');
 
+        // Add/remove has-pending class for visual indicator
+        if (data.count > 0) {
+          pendingCard?.classList.add('has-pending');
+        } else {
+          pendingCard?.classList.remove('has-pending');
+        }
+
+        // Auto-expand if has items and user hasn't manually collapsed
         if (userSetPending === null) {
-          // No user preference - auto-collapse if empty, expand if has items
           if (data.count === 0) {
             pendingContent?.classList.add('collapsed');
             pendingToggle?.classList.add('collapsed');
             pendingCard?.classList.add('collapsed');
           } else {
+            // Always expand if there are pending items and no user preference
             pendingContent?.classList.remove('collapsed');
             pendingToggle?.classList.remove('collapsed');
             pendingCard?.classList.remove('collapsed');
           }
+        } else if (data.count > 0 && userSetPending === 'true') {
+          // User collapsed it but has pending - show visual indicator (CSS handles this)
         }
 
         // Default Recently Confirmed to collapsed
