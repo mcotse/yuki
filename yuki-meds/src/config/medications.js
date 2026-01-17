@@ -25,6 +25,10 @@ export const FREQUENCY_SLOTS = {
 
 export const medications = {
   // ===== LEFT EYE (post-surgery) =====
+  // ORDER: Least viscous to most viscous for optimal absorption
+  // 1. Aqueous solutions first (ofloxacin, atropine)
+  // 2. Viscous biological preparations last (amniotic, plasma)
+  // Wait 3-5 minutes between each drop
   leftEye: [
     {
       id: 'ofloxacin',
@@ -35,28 +39,6 @@ export const medications = {
       notes: null,
       startDate: SURGERY_DATE,
       endDate: null, // until recheck
-      active: true
-    },
-    {
-      id: 'plasma',
-      name: 'Homologous plasma',
-      dose: '1 drop',
-      frequency: '4x_daily',
-      location: 'LEFT eye',
-      notes: '❄️ Refrigerated',
-      startDate: SURGERY_DATE,
-      endDate: null,
-      active: true
-    },
-    {
-      id: 'amniotic',
-      name: 'Amniotic eye drops',
-      dose: '1 drop',
-      frequency: '2x_daily',
-      location: 'LEFT eye',
-      notes: '❄️ Refrigerated',
-      startDate: SURGERY_DATE,
-      endDate: null,
       active: true
     },
     {
@@ -77,10 +59,35 @@ export const medications = {
         day2: ['MORNING', 'EVENING'],
         day3plus: ['MORNING']
       }
+    },
+    {
+      id: 'amniotic',
+      name: 'Amniotic eye drops',
+      dose: '1 drop',
+      frequency: '2x_daily',
+      location: 'LEFT eye',
+      notes: '❄️ Refrigerated',
+      startDate: SURGERY_DATE,
+      endDate: null,
+      active: true
+    },
+    {
+      id: 'plasma',
+      name: 'Homologous plasma',
+      dose: '1 drop',
+      frequency: '4x_daily',
+      location: 'LEFT eye',
+      notes: '❄️ Refrigerated',
+      startDate: SURGERY_DATE,
+      endDate: null,
+      active: true
     }
   ],
 
   // ===== RIGHT EYE (chronic/long-term) =====
+  // ORDER: Suspension before oily preparation for optimal absorption
+  // 1. Prednisolone acetate (suspension - shake well)
+  // 2. Tacrolimus/Cyclosporine (oily, most viscous)
   rightEye: [
     {
       id: 'prednisolone-eye',
@@ -151,8 +158,9 @@ export const MEDICATION_DEPENDENCIES = {
   spacingMinutes: 5,
 
   // Groups of medications that conflict with each other (same eye)
+  // Order reflects application sequence: least viscous to most viscous
   conflictGroups: {
-    leftEye: ['ofloxacin', 'plasma', 'amniotic', 'atropine'],
+    leftEye: ['ofloxacin', 'atropine', 'amniotic', 'plasma'],
     rightEye: ['prednisolone-eye', 'tacrolimus-cyclosporine']
   }
 };
