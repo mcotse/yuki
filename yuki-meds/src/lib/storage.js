@@ -335,6 +335,46 @@ export async function getConfirmationHistory(date = new Date()) {
   return confirmations;
 }
 
+// Check if a medication+slot is already confirmed for a given date
+export async function isAlreadyConfirmed(medicationId, slot, date = new Date()) {
+  const dateStr = getTodayDateString(date);
+  const key = `${CONFIRMED_PREFIX}${dateStr}:${slot}-${medicationId}`;
+
+  const client = getRedis();
+  if (client) {
+    const data = await client.get(key);
+    return !!data;
+  }
+
+  // Memory fallback
+  return memoryStore.confirmed.has(`${slot}-${medicationId}`);
+}
+
+// Early confirmation - confirm a medication+slot before reminder is sent
+// This allows confirming medications in advance of the scheduled time
+export async function confirmEarly(medicationId, slot, medication, date = new Date()) {
+  const client = getRedis();
+  const confirmedAt = Date.now();
+  const dateStr = getTodayDateString(date);
+  const key = `${slot}-${medicationId}`;
+
+  const confirmationData = {
+    confirmedAt,
+    medicationId,
+    slot,
+    medication: medication || { name: medicationId },
+    early: true  // Flag to indicate this was an early confirmation
+  };
+
+  if (client) {
+    await client.set(`${CONFIRMED_PREFIX}${dateStr}:${key}`, confirmationData, { ex: 86400 });
+  } else {
+    memoryStore.confirmed.add(key);
+  }
+
+  return { confirmed: true, early: true, confirmedAt, medicationId, slot };
+}
+
 // Update sentAt timestamp for reminders
 export async function markRemindersSent(reminderIds) {
   const pending = await getPendingReminders();

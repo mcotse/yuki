@@ -10,17 +10,17 @@ export const TIME_SLOTS = {
   LATE_MORNING: '11:00',
   MIDDAY: '14:00',
   EVENING: '19:00',
-  LATE_NIGHT: '23:00',
+  LATE_NIGHT: '22:30',  // Changed from 23:00 to 22:30 for earlier evening eye drops
   NIGHT: '00:00'
 };
 
 // Frequency mapping to time slots
 export const FREQUENCY_SLOTS = {
-  '4x_daily': ['MORNING', 'MIDDAY', 'EVENING', 'NIGHT'],
+  '4x_daily': ['MORNING', 'MIDDAY', 'EVENING', 'LATE_NIGHT'],  // Changed NIGHT to LATE_NIGHT (10:30 PM)
   '2x_daily': ['MORNING', 'EVENING'],
   '1x_daily': ['MORNING'],
   '12h': ['MORNING', 'EVENING'],
-  '12h_11': ['LATE_MORNING', 'LATE_NIGHT']  // 11 AM and 11 PM
+  '12h_11': ['LATE_MORNING', 'LATE_NIGHT']  // 11 AM and 10:30 PM
 };
 
 export const medications = {

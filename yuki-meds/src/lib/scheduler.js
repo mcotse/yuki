@@ -28,7 +28,7 @@ export function getCurrentTimeSlot(date = new Date()) {
     { name: 'LATE_MORNING', time: 11 * 60 },     // 11:00
     { name: 'MIDDAY', time: 14 * 60 },           // 14:00
     { name: 'EVENING', time: 19 * 60 },          // 19:00
-    { name: 'LATE_NIGHT', time: 23 * 60 },       // 23:00
+    { name: 'LATE_NIGHT', time: 22 * 60 + 30 },  // 22:30 (10:30 PM)
     { name: 'NIGHT', time: 24 * 60 }             // 00:00 (midnight)
   ];
 
@@ -100,7 +100,7 @@ function getStaggeredTime(slotName, staggerIndex) {
     LATE_MORNING: { hours: 11, minutes: 0 },
     MIDDAY: { hours: 14, minutes: 0 },
     EVENING: { hours: 19, minutes: 0 },
-    LATE_NIGHT: { hours: 23, minutes: 0 },
+    LATE_NIGHT: { hours: 22, minutes: 30 },  // 10:30 PM
     NIGHT: { hours: 0, minutes: 0 }
   };
 

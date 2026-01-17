@@ -3,7 +3,7 @@
 
 import { getIndividualReminders, getCurrentTimeSlot } from '../src/lib/scheduler.js';
 import { sendNotification } from '../src/lib/notifications.js';
-import { addPendingReminders, markRemindersSent, getRemindersToResend, getPendingReminders, claimSlot } from '../src/lib/storage.js';
+import { addPendingReminders, markRemindersSent, getRemindersToResend, getPendingReminders, claimSlot, isAlreadyConfirmed } from '../src/lib/storage.js';
 
 export const config = {
   runtime: 'nodejs'
@@ -103,12 +103,37 @@ export default async function handler(req, res) {
     });
   }
 
-  console.log(`[Cron] Sending ${reminders.length} individual reminders for ${slot}`);
+  // Filter out medications that were already confirmed early
+  const unconfirmedReminders = [];
+  const skippedReminders = [];
+
+  for (const reminder of reminders) {
+    const alreadyConfirmed = await isAlreadyConfirmed(reminder.medicationId, slot, now);
+    if (alreadyConfirmed) {
+      console.log(`[Cron] Skipping ${reminder.medication.name} - already confirmed early`);
+      skippedReminders.push(reminder);
+    } else {
+      unconfirmedReminders.push(reminder);
+    }
+  }
+
+  if (unconfirmedReminders.length === 0) {
+    console.log(`[Cron] All ${reminders.length} medications already confirmed early for ${slot}`);
+    return res.status(200).json({
+      triggered: true,
+      slot,
+      sent: false,
+      reason: 'All medications already confirmed early',
+      skipped: skippedReminders.map(r => r.medication.name)
+    });
+  }
+
+  console.log(`[Cron] Sending ${unconfirmedReminders.length} individual reminders for ${slot} (${skippedReminders.length} already confirmed)`);
 
   // Send individual WhatsApp messages
   const sentIds = [];
 
-  for (const reminder of reminders) {
+  for (const reminder of unconfirmedReminders) {
     try {
       console.log(`[Cron] Sending reminder for ${reminder.medication.name}...`);
       const sendResults = await sendNotification(reminder.message);
@@ -136,7 +161,7 @@ export default async function handler(req, res) {
   }
 
   // Store pending reminders for confirmation tracking
-  const sentReminders = reminders.filter(r => sentIds.includes(r.id));
+  const sentReminders = unconfirmedReminders.filter(r => sentIds.includes(r.id));
   await addPendingReminders(sentReminders);
 
   return res.status(200).json({
@@ -145,9 +170,11 @@ export default async function handler(req, res) {
     dayNumber,
     sent: true,
     count: sentIds.length,
+    skippedEarly: skippedReminders.length,
     reminders: sentReminders.map(r => ({
       medication: r.medication.name,
       time: r.scheduledTime
-    }))
+    })),
+    skipped: skippedReminders.map(r => r.medication.name)
   });
 }
