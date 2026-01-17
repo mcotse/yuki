@@ -489,3 +489,56 @@ export async function resetMedicationSchedule(medicationId) {
   }
   return { reset: true, medicationId };
 }
+
+// ===== KEYES DAILY TRACKING STORAGE =====
+
+const KEYES_PREFIX = 'yuki:keyes:';
+
+// Get Keyes tracking data for a specific date
+export async function getKeyesTracking(date = new Date()) {
+  const dateStr = getTodayDateString(date);
+  const client = getRedis();
+  const key = `${KEYES_PREFIX}${dateStr}`;
+
+  if (client) {
+    const data = await client.get(key);
+    return data || {};
+  }
+
+  // Memory fallback
+  if (!memoryStore.keyes) {
+    memoryStore.keyes = new Map();
+  }
+  return memoryStore.keyes.get(dateStr) || {};
+}
+
+// Update Keyes tracking item
+export async function updateKeyesItem(itemId, checked, date = new Date()) {
+  const dateStr = getTodayDateString(date);
+  const client = getRedis();
+  const key = `${KEYES_PREFIX}${dateStr}`;
+
+  // Get existing data
+  const existing = await getKeyesTracking(date);
+
+  // Update item with timestamp
+  const itemData = checked ? { checked: true, confirmedAt: Date.now() } : null;
+
+  const updated = { ...existing };
+  if (itemData) {
+    updated[itemId] = itemData;
+  } else {
+    delete updated[itemId];
+  }
+
+  if (client) {
+    await client.set(key, updated, { ex: 172800 }); // 48h expiry
+  } else {
+    if (!memoryStore.keyes) {
+      memoryStore.keyes = new Map();
+    }
+    memoryStore.keyes.set(dateStr, updated);
+  }
+
+  return { updated: true, date: dateStr, itemId, data: itemData };
+}

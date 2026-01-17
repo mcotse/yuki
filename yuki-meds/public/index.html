@@ -135,17 +135,25 @@
     }
 
     .calendar-nav-btn {
-      width: 36px;
+      min-width: 36px;
       height: 36px;
+      padding: 0 12px;
       border: 1px solid #ddd;
       background: white;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 500;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s;
+    }
+
+    .calendar-nav-btn.arrow {
+      padding: 0;
+      width: 36px;
+      font-size: 1.2rem;
     }
 
     .calendar-nav-btn:hover {
@@ -1276,6 +1284,42 @@
       background: #dc3545;
       color: white;
     }
+
+    /* Collapsible Card Styles */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .card-header h2 {
+      margin-bottom: 0;
+    }
+
+    .card-toggle {
+      font-size: 1.2rem;
+      color: #666;
+      transition: transform 0.2s;
+      padding: 4px;
+    }
+
+    .card-toggle.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .card-content {
+      margin-top: 16px;
+    }
+
+    .card-content.collapsed {
+      display: none;
+    }
+
+    .card.collapsed .card-header {
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
@@ -1311,68 +1355,82 @@
       </button>
       <header>
         <h1>🐕 Yuki Meds</h1>
-        <p>Post-surgery medication tracker</p>
+        <p>Medication & care tracker</p>
         <div id="current-time" class="current-time">--:-- --</div>
       </header>
 
-    <div class="card">
-      <h2>⏰ Pending Reminders</h2>
-      <div id="pending-status" class="status-bar">
-        <span>Loading...</span>
-        <button class="refresh-btn" onclick="loadPending()">Refresh</button>
+    <div class="card" id="pending-card">
+      <div class="card-header" onclick="toggleCard('pending')">
+        <h2>⏰ Pending Reminders</h2>
+        <span id="pending-toggle" class="card-toggle">▼</span>
       </div>
-      <ul id="pending-list" class="pending-list">
-        <li class="loading">Loading...</li>
-      </ul>
+      <div id="pending-content" class="card-content">
+        <div id="pending-status" class="status-bar">
+          <span>Loading...</span>
+          <button class="refresh-btn" onclick="event.stopPropagation(); loadPending()">Refresh</button>
+        </div>
+        <ul id="pending-list" class="pending-list">
+          <li class="loading">Loading...</li>
+        </ul>
+      </div>
     </div>
 
     <!-- Keyes Tracking Section -->
-    <div class="card keyes-card">
-      <h2>🐕 Keyes Daily Tracking</h2>
-      <div id="keyes-date-display" style="color: #8b4513; margin-bottom: 12px; font-weight: 500;"></div>
-      <div class="keyes-grid">
-        <div class="keyes-section-title">🍽️ Meals</div>
-        <div class="keyes-item" data-id="breakfast">
-          <div class="keyes-item-info">
-            <span class="keyes-item-icon">🌅</span>
-            <div class="keyes-item-details">
-              <h4>Breakfast</h4>
-              <p>9:00 AM</p>
+    <div class="card keyes-card" id="keyes-card">
+      <div class="card-header" onclick="toggleCard('keyes')">
+        <h2>🐕 Keyes Daily Tracking</h2>
+        <span id="keyes-toggle" class="card-toggle">▼</span>
+      </div>
+      <div id="keyes-content" class="card-content">
+        <div id="keyes-date-display" style="color: #8b4513; margin-bottom: 12px; font-weight: 500;"></div>
+        <div class="keyes-grid">
+          <div class="keyes-section-title">🍽️ Meals</div>
+          <div class="keyes-item" data-id="breakfast">
+            <div class="keyes-item-info">
+              <span class="keyes-item-icon">🌅</span>
+              <div class="keyes-item-details">
+                <h4>Breakfast</h4>
+                <p>9:00 AM</p>
+                <div class="keyes-time" id="keyes-time-breakfast"></div>
+              </div>
             </div>
+            <div class="keyes-checkbox" id="keyes-breakfast" onclick="toggleKeyes('breakfast')"></div>
           </div>
-          <div class="keyes-checkbox" id="keyes-breakfast" onclick="toggleKeyes('breakfast')"></div>
-        </div>
-        <div class="keyes-item" data-id="dinner">
-          <div class="keyes-item-info">
-            <span class="keyes-item-icon">🌙</span>
-            <div class="keyes-item-details">
-              <h4>Dinner</h4>
-              <p>6:30 PM</p>
+          <div class="keyes-item" data-id="dinner">
+            <div class="keyes-item-info">
+              <span class="keyes-item-icon">🌙</span>
+              <div class="keyes-item-details">
+                <h4>Dinner</h4>
+                <p>6:30 PM</p>
+                <div class="keyes-time" id="keyes-time-dinner"></div>
+              </div>
             </div>
+            <div class="keyes-checkbox" id="keyes-dinner" onclick="toggleKeyes('dinner')"></div>
           </div>
-          <div class="keyes-checkbox" id="keyes-dinner" onclick="toggleKeyes('dinner')"></div>
-        </div>
 
-        <div class="keyes-section-title">💊 Supplements (9:00 AM)</div>
-        <div class="keyes-item" data-id="hipchew">
-          <div class="keyes-item-info">
-            <span class="keyes-item-icon">🦴</span>
-            <div class="keyes-item-details">
-              <h4>Hip Chew</h4>
-              <p>1 chew daily</p>
+          <div class="keyes-section-title">💊 Supplements (9:00 AM)</div>
+          <div class="keyes-item" data-id="hipchew">
+            <div class="keyes-item-info">
+              <span class="keyes-item-icon">🦴</span>
+              <div class="keyes-item-details">
+                <h4>Hip Chew</h4>
+                <p>1 chew daily</p>
+                <div class="keyes-time" id="keyes-time-hipchew"></div>
+              </div>
             </div>
+            <div class="keyes-checkbox" id="keyes-hipchew" onclick="toggleKeyes('hipchew')"></div>
           </div>
-          <div class="keyes-checkbox" id="keyes-hipchew" onclick="toggleKeyes('hipchew')"></div>
-        </div>
-        <div class="keyes-item" data-id="probiotics">
-          <div class="keyes-item-info">
-            <span class="keyes-item-icon">🦠</span>
-            <div class="keyes-item-details">
-              <h4>Probiotics</h4>
-              <p>Daily supplement</p>
+          <div class="keyes-item" data-id="probiotics">
+            <div class="keyes-item-info">
+              <span class="keyes-item-icon">🦠</span>
+              <div class="keyes-item-details">
+                <h4>Probiotics</h4>
+                <p>Daily supplement</p>
+                <div class="keyes-time" id="keyes-time-probiotics"></div>
+              </div>
             </div>
+            <div class="keyes-checkbox" id="keyes-probiotics" onclick="toggleKeyes('probiotics')"></div>
           </div>
-          <div class="keyes-checkbox" id="keyes-probiotics" onclick="toggleKeyes('probiotics')"></div>
         </div>
       </div>
     </div>
@@ -1384,9 +1442,9 @@
         <div class="calendar-header">
           <h3 id="calendar-month-year"></h3>
           <div class="calendar-nav">
-            <button class="calendar-nav-btn" onclick="changeMonth(-1)">‹</button>
+            <button class="calendar-nav-btn arrow" onclick="changeMonth(-1)">‹</button>
             <button class="calendar-nav-btn" onclick="goToToday()">Today</button>
-            <button class="calendar-nav-btn" onclick="changeMonth(1)">›</button>
+            <button class="calendar-nav-btn arrow" onclick="changeMonth(1)">›</button>
           </div>
         </div>
         <div class="calendar-grid" id="calendar-grid">
@@ -1782,41 +1840,126 @@
       }
     }
 
+    // ===== COLLAPSIBLE CARDS =====
+    function toggleCard(cardId) {
+      const content = document.getElementById(`${cardId}-content`);
+      const toggle = document.getElementById(`${cardId}-toggle`);
+      const card = document.getElementById(`${cardId}-card`);
+
+      if (content.classList.contains('collapsed')) {
+        content.classList.remove('collapsed');
+        toggle.classList.remove('collapsed');
+        card.classList.remove('collapsed');
+      } else {
+        content.classList.add('collapsed');
+        toggle.classList.add('collapsed');
+        card.classList.add('collapsed');
+      }
+
+      // Save preference to localStorage
+      const collapsed = content.classList.contains('collapsed');
+      localStorage.setItem(`card-${cardId}-collapsed`, collapsed);
+    }
+
+    // Restore card collapse state from localStorage
+    function restoreCardStates() {
+      ['pending', 'keyes'].forEach(cardId => {
+        const collapsed = localStorage.getItem(`card-${cardId}-collapsed`) === 'true';
+        if (collapsed) {
+          const content = document.getElementById(`${cardId}-content`);
+          const toggle = document.getElementById(`${cardId}-toggle`);
+          const card = document.getElementById(`${cardId}-card`);
+          if (content) {
+            content.classList.add('collapsed');
+            toggle.classList.add('collapsed');
+            card.classList.add('collapsed');
+          }
+        }
+      });
+    }
+
     // ===== KEYES TRACKING =====
     const KEYES_ITEMS = ['breakfast', 'dinner', 'hipchew', 'probiotics'];
+    let keyesData = {}; // Cache for current date's data
 
-    function getKeyesStorageKey(date) {
+    function getKeyesDateString(date) {
       const d = new Date(date);
-      return `keyes-${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
-    function getKeyesData(date) {
-      const key = getKeyesStorageKey(date);
-      const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : {};
+    async function loadKeyesData(date) {
+      try {
+        const dateStr = getKeyesDateString(date);
+        const res = await fetch(`${API_BASE}/api/keyes?date=${dateStr}`, { credentials: 'include' });
+        const data = await res.json();
+        keyesData = data.items || {};
+        return keyesData;
+      } catch (err) {
+        console.error('Error loading Keyes data:', err);
+        return {};
+      }
     }
 
-    function saveKeyesData(date, data) {
-      const key = getKeyesStorageKey(date);
-      localStorage.setItem(key, JSON.stringify(data));
-    }
+    async function toggleKeyes(itemId) {
+      const currentState = keyesData[itemId]?.checked || false;
+      const newState = !currentState;
 
-    function toggleKeyes(itemId) {
-      const data = getKeyesData(selectedDate);
-      data[itemId] = !data[itemId];
-      saveKeyesData(selectedDate, data);
-      updateKeyesUI();
+      // Optimistic UI update
+      const el = document.getElementById(`keyes-${itemId}`);
+      if (newState) {
+        el.classList.add('checked');
+      } else {
+        el.classList.remove('checked');
+      }
+
+      try {
+        const dateStr = getKeyesDateString(selectedDate);
+        const res = await fetch(`${API_BASE}/api/keyes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ itemId, checked: newState, date: dateStr })
+        });
+        const result = await res.json();
+
+        if (result.updated) {
+          // Update local cache
+          if (newState && result.data) {
+            keyesData[itemId] = result.data;
+          } else {
+            delete keyesData[itemId];
+          }
+          updateKeyesUI();
+        }
+      } catch (err) {
+        console.error('Error updating Keyes item:', err);
+        // Revert optimistic update on error
+        if (currentState) {
+          el.classList.add('checked');
+        } else {
+          el.classList.remove('checked');
+        }
+      }
     }
 
     function updateKeyesUI() {
-      const data = getKeyesData(selectedDate);
       KEYES_ITEMS.forEach(item => {
         const el = document.getElementById(`keyes-${item}`);
+        const timeEl = document.getElementById(`keyes-time-${item}`);
+
         if (el) {
-          if (data[item]) {
+          const itemData = keyesData[item];
+          if (itemData?.checked) {
             el.classList.add('checked');
+            // Show confirmation time
+            if (timeEl && itemData.confirmedAtFormatted) {
+              timeEl.textContent = `Confirmed at ${itemData.confirmedAtFormatted}`;
+            }
           } else {
             el.classList.remove('checked');
+            if (timeEl) {
+              timeEl.textContent = '';
+            }
           }
         }
       });
@@ -1827,8 +1970,9 @@
       dateDisplay.textContent = selectedDate.toLocaleDateString('en-US', options);
     }
 
-    function loadKeyesForDate(date) {
+    async function loadKeyesForDate(date) {
       selectedDate = date;
+      await loadKeyesData(date);
       updateKeyesUI();
     }
 
@@ -2504,14 +2648,17 @@
 
     // Initialize app data (called after auth)
     async function initApp() {
-      // Initialize calendar and Keyes tracking
-      renderCalendar();
-      updateKeyesUI();
+      // Restore card collapse states
+      restoreCardStates();
 
-      // Load confirmation history first, then schedule in parallel with pending
+      // Initialize calendar
+      renderCalendar();
+
+      // Load confirmation history first, then schedule and Keyes in parallel with pending
       await loadConfirmationHistory();
       loadPending();
       loadScheduleForDate(selectedDate);
+      loadKeyesForDate(selectedDate);
     }
 
     // Main init - check auth first
