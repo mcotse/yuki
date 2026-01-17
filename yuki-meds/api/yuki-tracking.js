@@ -1,8 +1,8 @@
-// API endpoint for Keyes daily tracking
+// API endpoint for Yuki daily tracking
 // GET - get tracking data for a date
 // POST - update tracking item
 
-import { getKeyesTracking, updateKeyesItem } from '../src/lib/storage.js';
+import { getYukiTracking, updateYukiItem } from '../src/lib/storage.js';
 import { requireAuth } from '../src/lib/auth.js';
 
 export const config = {
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     const { date } = req.query || {};
     const trackingDate = date ? new Date(date) : new Date();
 
-    const data = await getKeyesTracking(trackingDate);
+    const data = await getYukiTracking(trackingDate);
 
     // Format the response with confirmation times
     const items = {};
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
     }
 
     const trackingDate = date ? new Date(date) : new Date();
-    const result = await updateKeyesItem(itemId, checked, trackingDate);
+    const result = await updateYukiItem(itemId, checked, trackingDate);
 
     // Return formatted confirmation time
     if (result.data && result.data.confirmedAt) {

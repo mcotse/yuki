@@ -490,15 +490,15 @@ export async function resetMedicationSchedule(medicationId) {
   return { reset: true, medicationId };
 }
 
-// ===== KEYES DAILY TRACKING STORAGE =====
+// ===== YUKI DAILY TRACKING STORAGE =====
 
-const KEYES_PREFIX = 'yuki:keyes:';
+const YUKI_TRACKING_PREFIX = 'yuki:tracking:';
 
-// Get Keyes tracking data for a specific date
-export async function getKeyesTracking(date = new Date()) {
+// Get Yuki tracking data for a specific date
+export async function getYukiTracking(date = new Date()) {
   const dateStr = getTodayDateString(date);
   const client = getRedis();
-  const key = `${KEYES_PREFIX}${dateStr}`;
+  const key = `${YUKI_TRACKING_PREFIX}${dateStr}`;
 
   if (client) {
     const data = await client.get(key);
@@ -506,20 +506,20 @@ export async function getKeyesTracking(date = new Date()) {
   }
 
   // Memory fallback
-  if (!memoryStore.keyes) {
-    memoryStore.keyes = new Map();
+  if (!memoryStore.yukiTracking) {
+    memoryStore.yukiTracking = new Map();
   }
-  return memoryStore.keyes.get(dateStr) || {};
+  return memoryStore.yukiTracking.get(dateStr) || {};
 }
 
-// Update Keyes tracking item
-export async function updateKeyesItem(itemId, checked, date = new Date()) {
+// Update Yuki tracking item
+export async function updateYukiItem(itemId, checked, date = new Date()) {
   const dateStr = getTodayDateString(date);
   const client = getRedis();
-  const key = `${KEYES_PREFIX}${dateStr}`;
+  const key = `${YUKI_TRACKING_PREFIX}${dateStr}`;
 
   // Get existing data
-  const existing = await getKeyesTracking(date);
+  const existing = await getYukiTracking(date);
 
   // Update item with timestamp
   const itemData = checked ? { checked: true, confirmedAt: Date.now() } : null;
@@ -534,10 +534,10 @@ export async function updateKeyesItem(itemId, checked, date = new Date()) {
   if (client) {
     await client.set(key, updated, { ex: 172800 }); // 48h expiry
   } else {
-    if (!memoryStore.keyes) {
-      memoryStore.keyes = new Map();
+    if (!memoryStore.yukiTracking) {
+      memoryStore.yukiTracking = new Map();
     }
-    memoryStore.keyes.set(dateStr, updated);
+    memoryStore.yukiTracking.set(dateStr, updated);
   }
 
   return { updated: true, date: dateStr, itemId, data: itemData };

@@ -237,21 +237,21 @@
       color: rgba(255,255,255,0.8);
     }
 
-    /* Keyes Section Styles */
-    .keyes-card {
+    /* Yuki Tracking Section Styles */
+    .yuki-tracking-card {
       background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
     }
 
-    .keyes-card h2 {
+    .yuki-tracking-card h2 {
       color: #8b4513;
     }
 
-    .keyes-grid {
+    .yuki-tracking-grid {
       display: grid;
       gap: 12px;
     }
 
-    .keyes-item {
+    .yuki-tracking-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -261,29 +261,29 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    .keyes-item-info {
+    .yuki-tracking-item-info {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .keyes-item-icon {
+    .yuki-tracking-item-icon {
       font-size: 1.5rem;
     }
 
-    .keyes-item-details h4 {
+    .yuki-tracking-item-details h4 {
       margin: 0;
       font-size: 1rem;
       color: #333;
     }
 
-    .keyes-item-details p {
+    .yuki-tracking-item-details p {
       margin: 2px 0 0;
       font-size: 0.85rem;
       color: #666;
     }
 
-    .keyes-checkbox {
+    .yuki-tracking-checkbox {
       width: 28px;
       height: 28px;
       border: 2px solid #ddd;
@@ -296,29 +296,29 @@
       background: white;
     }
 
-    .keyes-checkbox:hover {
+    .yuki-tracking-checkbox:hover {
       border-color: #28a745;
     }
 
-    .keyes-checkbox.checked {
+    .yuki-tracking-checkbox.checked {
       background: #28a745;
       border-color: #28a745;
       color: white;
     }
 
-    .keyes-checkbox.checked::after {
+    .yuki-tracking-checkbox.checked::after {
       content: '✓';
       font-size: 1rem;
       font-weight: bold;
     }
 
-    .keyes-time {
+    .yuki-tracking-time {
       font-size: 0.75rem;
       color: #999;
       margin-top: 4px;
     }
 
-    .keyes-section-title {
+    .yuki-tracking-section-title {
       font-size: 0.85rem;
       font-weight: 600;
       color: #8b4513;
@@ -328,7 +328,7 @@
       gap: 6px;
     }
 
-    .keyes-section-title:first-child {
+    .yuki-tracking-section-title:first-child {
       margin-top: 0;
     }
 
@@ -1375,61 +1375,61 @@
       </div>
     </div>
 
-    <!-- Keyes Tracking Section -->
-    <div class="card keyes-card" id="keyes-card">
-      <div class="card-header" onclick="toggleCard('keyes')">
-        <h2>🐕 Keyes Daily Tracking</h2>
-        <span id="keyes-toggle" class="card-toggle">▼</span>
+    <!-- Yuki Tracking Section -->
+    <div class="card yuki-tracking-card" id="yuki-tracking-card">
+      <div class="card-header" onclick="toggleCard('yuki-tracking')">
+        <h2>🐕 Yuki Daily Tracking</h2>
+        <span id="yuki-tracking-toggle" class="card-toggle">▼</span>
       </div>
-      <div id="keyes-content" class="card-content">
-        <div id="keyes-date-display" style="color: #8b4513; margin-bottom: 12px; font-weight: 500;"></div>
-        <div class="keyes-grid">
-          <div class="keyes-section-title">🍽️ Meals</div>
-          <div class="keyes-item" data-id="breakfast">
-            <div class="keyes-item-info">
-              <span class="keyes-item-icon">🌅</span>
-              <div class="keyes-item-details">
+      <div id="yuki-tracking-content" class="card-content">
+        <div id="yuki-date-display" style="color: #8b4513; margin-bottom: 12px; font-weight: 500;"></div>
+        <div class="yuki-tracking-grid">
+          <div class="yuki-tracking-section-title">🍽️ Meals</div>
+          <div class="yuki-tracking-item" data-id="breakfast">
+            <div class="yuki-tracking-item-info">
+              <span class="yuki-tracking-item-icon">🌅</span>
+              <div class="yuki-tracking-item-details">
                 <h4>Breakfast</h4>
                 <p>9:00 AM</p>
-                <div class="keyes-time" id="keyes-time-breakfast"></div>
+                <div class="yuki-tracking-time" id="yuki-tracking-time-breakfast"></div>
               </div>
             </div>
-            <div class="keyes-checkbox" id="keyes-breakfast" onclick="toggleKeyes('breakfast')"></div>
+            <div class="yuki-tracking-checkbox" id="yuki-tracking-breakfast" onclick="toggleYukiItem('breakfast')"></div>
           </div>
-          <div class="keyes-item" data-id="dinner">
-            <div class="keyes-item-info">
-              <span class="keyes-item-icon">🌙</span>
-              <div class="keyes-item-details">
+          <div class="yuki-tracking-item" data-id="dinner">
+            <div class="yuki-tracking-item-info">
+              <span class="yuki-tracking-item-icon">🌙</span>
+              <div class="yuki-tracking-item-details">
                 <h4>Dinner</h4>
                 <p>6:30 PM</p>
-                <div class="keyes-time" id="keyes-time-dinner"></div>
+                <div class="yuki-tracking-time" id="yuki-tracking-time-dinner"></div>
               </div>
             </div>
-            <div class="keyes-checkbox" id="keyes-dinner" onclick="toggleKeyes('dinner')"></div>
+            <div class="yuki-tracking-checkbox" id="yuki-tracking-dinner" onclick="toggleYukiItem('dinner')"></div>
           </div>
 
-          <div class="keyes-section-title">💊 Supplements (9:00 AM)</div>
-          <div class="keyes-item" data-id="hipchew">
-            <div class="keyes-item-info">
-              <span class="keyes-item-icon">🦴</span>
-              <div class="keyes-item-details">
+          <div class="yuki-tracking-section-title">💊 Supplements (9:00 AM)</div>
+          <div class="yuki-tracking-item" data-id="hipchew">
+            <div class="yuki-tracking-item-info">
+              <span class="yuki-tracking-item-icon">🦴</span>
+              <div class="yuki-tracking-item-details">
                 <h4>Hip Chew</h4>
                 <p>1 chew daily</p>
-                <div class="keyes-time" id="keyes-time-hipchew"></div>
+                <div class="yuki-tracking-time" id="yuki-tracking-time-hipchew"></div>
               </div>
             </div>
-            <div class="keyes-checkbox" id="keyes-hipchew" onclick="toggleKeyes('hipchew')"></div>
+            <div class="yuki-tracking-checkbox" id="yuki-tracking-hipchew" onclick="toggleYukiItem('hipchew')"></div>
           </div>
-          <div class="keyes-item" data-id="probiotics">
-            <div class="keyes-item-info">
-              <span class="keyes-item-icon">🦠</span>
-              <div class="keyes-item-details">
+          <div class="yuki-tracking-item" data-id="probiotics">
+            <div class="yuki-tracking-item-info">
+              <span class="yuki-tracking-item-icon">🦠</span>
+              <div class="yuki-tracking-item-details">
                 <h4>Probiotics</h4>
                 <p>Daily supplement</p>
-                <div class="keyes-time" id="keyes-time-probiotics"></div>
+                <div class="yuki-tracking-time" id="yuki-tracking-time-probiotics"></div>
               </div>
             </div>
-            <div class="keyes-checkbox" id="keyes-probiotics" onclick="toggleKeyes('probiotics')"></div>
+            <div class="yuki-tracking-checkbox" id="yuki-tracking-probiotics" onclick="toggleYukiItem('probiotics')"></div>
           </div>
         </div>
       </div>
@@ -1807,7 +1807,7 @@
       selectedDate = new Date();
       renderCalendar();
       loadScheduleForDate(selectedDate);
-      loadKeyesForDate(selectedDate);
+      loadYukiTrackingForDate(selectedDate);
     }
 
     function selectDate(year, month, day) {
@@ -1815,7 +1815,7 @@
       calendarDate = new Date(year, month, 1);
       renderCalendar();
       loadScheduleForDate(selectedDate);
-      loadKeyesForDate(selectedDate);
+      loadYukiTrackingForDate(selectedDate);
     }
 
     function loadScheduleForDate(date) {
@@ -1863,7 +1863,7 @@
 
     // Restore card collapse state from localStorage
     function restoreCardStates() {
-      ['pending', 'keyes'].forEach(cardId => {
+      ['pending', 'yuki-tracking'].forEach(cardId => {
         const collapsed = localStorage.getItem(`card-${cardId}-collapsed`) === 'true';
         if (collapsed) {
           const content = document.getElementById(`${cardId}-content`);
@@ -1878,34 +1878,34 @@
       });
     }
 
-    // ===== KEYES TRACKING =====
-    const KEYES_ITEMS = ['breakfast', 'dinner', 'hipchew', 'probiotics'];
-    let keyesData = {}; // Cache for current date's data
+    // ===== YUKI TRACKING =====
+    const YUKI_TRACKING_ITEMS = ['breakfast', 'dinner', 'hipchew', 'probiotics'];
+    let yukiTrackingData = {}; // Cache for current date's data
 
-    function getKeyesDateString(date) {
+    function getYukiDateString(date) {
       const d = new Date(date);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
-    async function loadKeyesData(date) {
+    async function loadYukiTrackingData(date) {
       try {
-        const dateStr = getKeyesDateString(date);
-        const res = await fetch(`${API_BASE}/api/keyes?date=${dateStr}`, { credentials: 'include' });
+        const dateStr = getYukiDateString(date);
+        const res = await fetch(`${API_BASE}/api/yuki-tracking?date=${dateStr}`, { credentials: 'include' });
         const data = await res.json();
-        keyesData = data.items || {};
-        return keyesData;
+        yukiTrackingData = data.items || {};
+        return yukiTrackingData;
       } catch (err) {
-        console.error('Error loading Keyes data:', err);
+        console.error('Error loading Yuki tracking data:', err);
         return {};
       }
     }
 
-    async function toggleKeyes(itemId) {
-      const currentState = keyesData[itemId]?.checked || false;
+    async function toggleYukiItem(itemId) {
+      const currentState = yukiTrackingData[itemId]?.checked || false;
       const newState = !currentState;
 
       // Optimistic UI update
-      const el = document.getElementById(`keyes-${itemId}`);
+      const el = document.getElementById(`yuki-tracking-${itemId}`);
       if (newState) {
         el.classList.add('checked');
       } else {
@@ -1913,8 +1913,8 @@
       }
 
       try {
-        const dateStr = getKeyesDateString(selectedDate);
-        const res = await fetch(`${API_BASE}/api/keyes`, {
+        const dateStr = getYukiDateString(selectedDate);
+        const res = await fetch(`${API_BASE}/api/yuki-tracking`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -1925,14 +1925,14 @@
         if (result.updated) {
           // Update local cache
           if (newState && result.data) {
-            keyesData[itemId] = result.data;
+            yukiTrackingData[itemId] = result.data;
           } else {
-            delete keyesData[itemId];
+            delete yukiTrackingData[itemId];
           }
-          updateKeyesUI();
+          updateYukiTrackingUI();
         }
       } catch (err) {
-        console.error('Error updating Keyes item:', err);
+        console.error('Error updating Yuki tracking item:', err);
         // Revert optimistic update on error
         if (currentState) {
           el.classList.add('checked');
@@ -1942,13 +1942,13 @@
       }
     }
 
-    function updateKeyesUI() {
-      KEYES_ITEMS.forEach(item => {
-        const el = document.getElementById(`keyes-${item}`);
-        const timeEl = document.getElementById(`keyes-time-${item}`);
+    function updateYukiTrackingUI() {
+      YUKI_TRACKING_ITEMS.forEach(item => {
+        const el = document.getElementById(`yuki-tracking-${item}`);
+        const timeEl = document.getElementById(`yuki-tracking-time-${item}`);
 
         if (el) {
-          const itemData = keyesData[item];
+          const itemData = yukiTrackingData[item];
           if (itemData?.checked) {
             el.classList.add('checked');
             // Show confirmation time
@@ -1965,15 +1965,15 @@
       });
 
       // Update date display
-      const dateDisplay = document.getElementById('keyes-date-display');
+      const dateDisplay = document.getElementById('yuki-date-display');
       const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       dateDisplay.textContent = selectedDate.toLocaleDateString('en-US', options);
     }
 
-    async function loadKeyesForDate(date) {
+    async function loadYukiTrackingForDate(date) {
       selectedDate = date;
-      await loadKeyesData(date);
-      updateKeyesUI();
+      await loadYukiTrackingData(date);
+      updateYukiTrackingUI();
     }
 
     // Track which slots have pending medications
@@ -2654,11 +2654,11 @@
       // Initialize calendar
       renderCalendar();
 
-      // Load confirmation history first, then schedule and Keyes in parallel with pending
+      // Load confirmation history first, then schedule and Yuki tracking in parallel with pending
       await loadConfirmationHistory();
       loadPending();
       loadScheduleForDate(selectedDate);
-      loadKeyesForDate(selectedDate);
+      loadYukiTrackingForDate(selectedDate);
     }
 
     // Main init - check auth first
