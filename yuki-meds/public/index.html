@@ -1996,6 +1996,8 @@
 
     // ===== COLLAPSIBLE CARDS =====
     function toggleCard(cardId) {
+      console.log('toggleCard called for:', cardId);
+
       // Handle different content element naming conventions
       let content = document.getElementById(`${cardId}-content`);
       if (!content) {
@@ -2004,13 +2006,25 @@
       const toggle = document.getElementById(`${cardId}-toggle`);
       const card = document.getElementById(`${cardId}-card`);
 
-      if (!content) return;
+      console.log('Elements found:', {
+        content: !!content,
+        toggle: !!toggle,
+        card: !!card,
+        isCollapsed: content?.classList.contains('collapsed')
+      });
+
+      if (!content) {
+        console.error('Content element not found for card:', cardId);
+        return;
+      }
 
       if (content.classList.contains('collapsed')) {
+        console.log('Expanding card:', cardId);
         content.classList.remove('collapsed');
         toggle?.classList.remove('collapsed');
         card?.classList.remove('collapsed');
       } else {
+        console.log('Collapsing card:', cardId);
         content.classList.add('collapsed');
         toggle?.classList.add('collapsed');
         card?.classList.add('collapsed');
@@ -2019,6 +2033,7 @@
       // Save preference to localStorage
       const collapsed = content.classList.contains('collapsed');
       localStorage.setItem(`card-${cardId}-collapsed`, collapsed);
+      console.log('Card state saved to localStorage:', collapsed);
     }
 
     // Restore card collapse state from localStorage
