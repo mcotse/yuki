@@ -347,6 +347,68 @@
       margin-top: 0;
     }
 
+    /* History Section Styles */
+    .history-date-display {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+      font-size: 1rem;
+    }
+
+    .history-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .unified-history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: #f0f8f0;
+      border-radius: 8px;
+      border-left: 3px solid #28a745;
+    }
+
+    .unified-history-item.medication {
+      background: #fff8f0;
+      border-left-color: #C9A86C;
+    }
+
+    .unified-history-item.food {
+      background: #fef9f0;
+      border-left-color: #ff9800;
+    }
+
+    .history-item-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .history-item-icon {
+      font-size: 1.2rem;
+    }
+
+    .history-item-time {
+      color: #666;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .empty-state .icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+
     .slot {
       margin-bottom: 20px;
       padding: 16px;
@@ -1531,6 +1593,19 @@
         </div>
       </div>
     </div>
+
+    <div class="card" id="history-card">
+      <div class="card-header" onclick="toggleCard('history')">
+        <h2>📜 Confirmation History</h2>
+        <span id="history-toggle" class="card-toggle">▼</span>
+      </div>
+      <div id="history-content" class="card-content collapsed">
+        <div id="history-date-display" class="history-date-display"></div>
+        <div id="history-list-container">
+          <div class="empty-state">Select a date from the calendar above</div>
+        </div>
+      </div>
+    </div>
     </div>
   </div><!-- end main-content -->
 
@@ -1895,6 +1970,7 @@
       await loadConfirmationHistory(selectedDate);
       loadScheduleForDate(selectedDate);
       loadYukiTrackingForDate(selectedDate);
+      loadUnifiedHistory(selectedDate);
     }
 
     function loadScheduleForDate(date) {
@@ -1952,7 +2028,8 @@
       const cards = [
         ['pending', '-content'],
         ['yuki-tracking', '-content'],
-        ['schedule', '-content-wrapper']
+        ['schedule', '-content-wrapper'],
+        ['history', '-content']
       ];
 
       cards.forEach(([cardId, contentSuffix]) => {
@@ -2066,6 +2143,120 @@
       selectedDate = date;
       await loadYukiTrackingData(date);
       updateYukiTrackingUI();
+    }
+
+    // Global state for history
+    let unifiedHistory = [];
+
+    // Load unified history for a date
+    async function loadUnifiedHistory(date) {
+      const dateStr = formatDateForAPI(date);
+
+      try {
+        // Fetch both medication and food tracking history in parallel
+        const [medRes, foodRes] = await Promise.all([
+          fetch(`${API_BASE}/api/pending?history&date=${dateStr}`, { credentials: 'include' }),
+          fetch(`${API_BASE}/api/yuki-tracking?date=${dateStr}`, { credentials: 'include' })
+        ]);
+
+        const medData = await medRes.json();
+        const foodData = await foodRes.json();
+
+        // Transform medication confirmations
+        const medItems = (medData.confirmations || []).map(c => ({
+          type: 'medication',
+          timestamp: c.confirmedAt,
+          timeFormatted: c.confirmedAtFormatted,
+          name: c.medication,
+          icon: '💊'
+        }));
+
+        // Transform food tracking confirmations
+        const foodItems = Object.entries(foodData.items || {})
+          .filter(([_, data]) => data.checked && data.confirmedAt)
+          .map(([itemId, data]) => ({
+            type: 'food',
+            timestamp: data.confirmedAt,
+            timeFormatted: data.confirmedAtFormatted,
+            name: getFoodItemName(itemId),
+            icon: getFoodItemIcon(itemId)
+          }));
+
+        // Merge and sort chronologically (most recent first)
+        unifiedHistory = [...medItems, ...foodItems]
+          .sort((a, b) => b.timestamp - a.timestamp);
+
+        renderHistoryList(date);
+      } catch (error) {
+        console.error('Error loading history:', error);
+        document.getElementById('history-list-container').innerHTML =
+          '<div class="empty-state"><div class="icon">⚠️</div><div>Error loading history</div></div>';
+      }
+    }
+
+    // Render the history list
+    function renderHistoryList(date) {
+      const container = document.getElementById('history-list-container');
+      const dateDisplay = document.getElementById('history-date-display');
+
+      // Update date display
+      dateDisplay.textContent = formatDateLong(date);
+
+      // Handle empty state
+      if (unifiedHistory.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📋</div>
+            <div>No confirmations for this date</div>
+          </div>
+        `;
+        return;
+      }
+
+      // Render history items
+      const html = unifiedHistory.map(item => `
+        <div class="unified-history-item ${item.type}">
+          <div class="history-item-name">
+            <span class="history-item-icon">${item.icon}</span>
+            <span>${item.name}</span>
+          </div>
+          <span class="history-item-time">${item.timeFormatted}</span>
+        </div>
+      `).join('');
+
+      container.innerHTML = html;
+    }
+
+    // Helper: Get food item display name
+    function getFoodItemName(itemId) {
+      const names = {
+        breakfast: 'Breakfast',
+        dinner: 'Dinner',
+        hipchew: 'Hip Chew',
+        probiotics: 'Probiotics'
+      };
+      return names[itemId] || itemId;
+    }
+
+    // Helper: Get food item emoji icon
+    function getFoodItemIcon(itemId) {
+      const icons = {
+        breakfast: '🌅',
+        dinner: '🌙',
+        hipchew: '🦴',
+        probiotics: '🦠'
+      };
+      return icons[itemId] || '✓';
+    }
+
+    // Helper: Format date for display (e.g., "Friday, January 17, 2026")
+    function formatDateLong(date) {
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
     }
 
     // Track which slots have pending medications
