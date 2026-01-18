@@ -6,6 +6,7 @@ import {
   getDayNumber,
   getAtropineSlots
 } from '../config/medications.js';
+import { isAlreadyConfirmed } from './storage.js';
 
 const TIMEZONE = 'America/Los_Angeles';
 const EYE_DROP_STAGGER_MINUTES = 6;
@@ -287,4 +288,69 @@ export function getDaySchedule(date = new Date()) {
     date: date.toDateString(),
     schedule
   };
+}
+
+// Get time slots that have passed for today
+export function getPastTimeSlots(date = new Date()) {
+  const localDate = toLocalTime(date);
+  const hours = localDate.getHours();
+  const minutes = localDate.getMinutes();
+  const currentTime = hours * 60 + minutes;
+
+  const slots = [
+    { name: 'MORNING', time: 8 * 60 + 30 },      // 8:30
+    { name: 'LATE_MORNING', time: 11 * 60 },     // 11:00
+    { name: 'MIDDAY', time: 14 * 60 },           // 14:00
+    { name: 'EVENING', time: 19 * 60 },          // 19:00
+    { name: 'LATE_NIGHT', time: 22 * 60 + 30 },  // 22:30 (10:30 PM)
+  ];
+
+  // Return slots where the time has passed (with 15 min buffer)
+  return slots
+    .filter(slot => currentTime >= slot.time + 15)
+    .map(slot => slot.name);
+}
+
+// Get medications that are past due and not confirmed
+// This includes medications from past time slots that haven't been confirmed
+export function getPastDueMedications(date = new Date()) {
+  const pastSlots = getPastTimeSlots(date);
+  const allMeds = getAllMedications();
+  const dayNumber = getDayNumber(date);
+  const dateStr = date.toISOString().split('T')[0];
+
+  const pastDue = [];
+
+  for (const slot of pastSlots) {
+    const dueMeds = allMeds.filter(med => med.active && isMedicationDue(med, slot, date));
+
+    for (const med of dueMeds) {
+      pastDue.push({
+        id: `${dateStr}-${slot}-${med.id}`,
+        medicationId: med.id,
+        medication: med,
+        slot,
+        dayNumber,
+        scheduledTime: TIME_SLOTS[slot],
+        pastDue: true  // Flag to indicate this is a missed/past due medication
+      });
+    }
+  }
+
+  return pastDue;
+}
+
+// Get past due medications that haven't been confirmed (async - checks confirmation status)
+export async function getPastDueUnconfirmed(date = new Date()) {
+  const pastDue = getPastDueMedications(date);
+  const unconfirmed = [];
+
+  for (const med of pastDue) {
+    const confirmed = await isAlreadyConfirmed(med.medicationId, med.slot, date);
+    if (!confirmed) {
+      unconfirmed.push(med);
+    }
+  }
+
+  return unconfirmed;
 }

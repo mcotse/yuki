@@ -2,6 +2,7 @@
 
 import { getPendingReminders, confirmLatestPending, confirmById, clearPending, dedupePendingReminders, cleanupCorruptedReminders, getConfirmationHistory, confirmEarly, isAlreadyConfirmed } from '../src/lib/storage.js';
 import { requireAuth } from '../src/lib/auth.js';
+import { getPastDueUnconfirmed } from '../src/lib/scheduler.js';
 
 export const config = {
   runtime: 'nodejs'
@@ -54,11 +55,24 @@ export default async function handler(req, res) {
       });
     }
 
-    // Default: return pending reminders
+    // Default: return pending reminders merged with past due unconfirmed
     const pending = await getPendingReminders();
+    const pastDueUnconfirmed = await getPastDueUnconfirmed();
+
+    // Merge and deduplicate by ID (pending reminders take precedence)
+    const pendingIds = new Set(pending.map(r => r.id));
+    const merged = [
+      ...pending,
+      ...pastDueUnconfirmed.filter(r => !pendingIds.has(r.id))
+    ];
+
+    // Sort by slot order
+    const slotOrder = ['MORNING', 'LATE_MORNING', 'MIDDAY', 'EVENING', 'LATE_NIGHT', 'NIGHT'];
+    merged.sort((a, b) => slotOrder.indexOf(a.slot) - slotOrder.indexOf(b.slot));
+
     return res.status(200).json({
-      count: pending.length,
-      reminders: pending.map(r => ({
+      count: merged.length,
+      reminders: merged.map(r => ({
         id: r.id,
         medicationId: r.medicationId,
         medication: r.medication?.name || r.medicationId,
@@ -67,6 +81,7 @@ export default async function handler(req, res) {
         scheduledTime: r.scheduledTime,
         slot: r.slot,
         sentAt: r.sentAt,
+        pastDue: r.pastDue || false,  // Flag for past due without reminder sent
         ageMinutes: r.sentAt ? Math.round((Date.now() - r.sentAt) / 60000) : null
       }))
     });

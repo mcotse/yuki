@@ -855,6 +855,24 @@
       border-left: 4px solid #ffc107;
     }
 
+    .pending-item.past-due {
+      background: #ffebee;
+      border-left-color: #ef5350;
+    }
+
+    .missed-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #ef5350;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+
     .pending-info {
       flex: 1;
     }
@@ -2327,14 +2345,29 @@
               `;
             }
 
-            const itemClass = hasWarning ? 'pending-item has-warning' : (warningCleared ? 'pending-item warning-cleared' : 'pending-item');
+            let itemClass = 'pending-item';
+            if (r.pastDue) {
+              itemClass = 'pending-item past-due';
+            } else if (hasWarning) {
+              itemClass = 'pending-item has-warning';
+            } else if (warningCleared) {
+              itemClass = 'pending-item warning-cleared';
+            }
+
+            // Show different status for past due vs sent reminders
+            let statusHtml = '';
+            if (r.pastDue) {
+              statusHtml = `<div class="missed-badge">⚠️ Missed</div>`;
+            } else if (r.ageMinutes !== null) {
+              statusHtml = `<div class="pending-meta">Sent ${r.ageMinutes}m ago</div>`;
+            }
 
             return `
               <li class="${itemClass}">
                 <div class="pending-info">
                   <div class="pending-name">${r.medication}</div>
                   <div class="pending-meta">${r.location || ''} ${r.dose ? '• ' + r.dose : ''} ${r.scheduledTime ? '• ' + r.scheduledTime : ''}</div>
-                  ${r.ageMinutes !== null ? `<div class="pending-meta">Sent ${r.ageMinutes}m ago</div>` : ''}
+                  ${statusHtml}
                   ${warningHtml}
                 </div>
                 <button class="confirm-btn" onclick="confirmMed('${r.id}')" ${hasWarning ? 'title="Spacing warning - proceed with caution"' : ''}>Confirm</button>
