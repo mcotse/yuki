@@ -1352,10 +1352,23 @@
       background: linear-gradient(90deg, rgba(239,68,68,0.08) 0%, white 20%);
     }
 
-    #pending-card.collapsed.has-pending .card-header h2::after {
-      content: ' (!)';
-      color: #ef4444;
-      font-weight: bold;
+    .pending-badge {
+      display: none;
+      background: #ef4444;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      padding: 0 6px;
+      margin-left: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #pending-card.has-pending .pending-badge {
+      display: inline-flex;
     }
   </style>
 </head>
@@ -1401,7 +1414,7 @@
 
     <div class="card" id="pending-card">
       <div class="card-header" onclick="toggleCard('pending')">
-        <h2>⏰ Pending Reminders</h2>
+        <h2>⏰ Pending Reminders<span class="pending-badge" id="pending-badge">0</span></h2>
         <span id="pending-toggle" class="card-toggle">▼</span>
       </div>
       <div id="pending-content" class="card-content">
@@ -1847,18 +1860,21 @@
       renderCalendar();
     }
 
-    function goToToday() {
+    async function goToToday() {
       calendarDate = new Date();
       selectedDate = new Date();
       renderCalendar();
+      await loadConfirmationHistory(selectedDate);
       loadScheduleForDate(selectedDate);
       loadYukiTrackingForDate(selectedDate);
     }
 
-    function selectDate(year, month, day) {
+    async function selectDate(year, month, day) {
       selectedDate = new Date(year, month, day);
       calendarDate = new Date(year, month, 1);
       renderCalendar();
+      // Reload confirmation history for the selected date, then load schedule
+      await loadConfirmationHistory(selectedDate);
       loadScheduleForDate(selectedDate);
       loadYukiTrackingForDate(selectedDate);
     }
@@ -2215,9 +2231,13 @@
       localStorage.setItem(`slot-${slotId}-collapsed`, content.classList.contains('collapsed'));
     }
 
-    async function loadConfirmationHistory() {
+    async function loadConfirmationHistory(date = null) {
       try {
-        const res = await fetch(`${API_BASE}/api/pending?history`, { credentials: 'include' });
+        // Use the provided date or selectedDate to load history for the correct day
+        const queryDate = date || selectedDate;
+        const dateStr = `${queryDate.getFullYear()}-${String(queryDate.getMonth() + 1).padStart(2, '0')}-${String(queryDate.getDate()).padStart(2, '0')}`;
+
+        const res = await fetch(`${API_BASE}/api/pending?history&date=${dateStr}`, { credentials: 'include' });
         const data = await res.json();
         confirmationHistory = data.confirmations || [];
 
@@ -2363,11 +2383,14 @@
         const pendingCard = document.getElementById('pending-card');
         const userSetPending = localStorage.getItem('card-pending-collapsed');
 
-        // Add/remove has-pending class for visual indicator
+        // Add/remove has-pending class for visual indicator and update badge
+        const pendingBadge = document.getElementById('pending-badge');
         if (data.count > 0) {
           pendingCard?.classList.add('has-pending');
+          if (pendingBadge) pendingBadge.textContent = data.count;
         } else {
           pendingCard?.classList.remove('has-pending');
+          if (pendingBadge) pendingBadge.textContent = '0';
         }
 
         // Auto-expand if has items and user hasn't manually collapsed
