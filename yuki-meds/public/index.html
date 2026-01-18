@@ -2370,7 +2370,7 @@
                   ${statusHtml}
                   ${warningHtml}
                 </div>
-                <button class="confirm-btn" onclick="confirmMed('${r.id}')" ${hasWarning ? 'title="Spacing warning - proceed with caution"' : ''}>Confirm</button>
+                <button class="confirm-btn" onclick="confirmMed('${r.id}', ${r.pastDue || false})" ${hasWarning ? 'title="Spacing warning - proceed with caution"' : ''}>Confirm</button>
               </li>
             `;
           }).join('');
@@ -2628,18 +2628,35 @@
       }
     }
 
-    async function confirmMed(id) {
+    async function confirmMed(id, isPastDue = false) {
       try {
+        let body;
+
+        // For past due medications, parse the ID to get slot and medicationId
+        // ID format: YYYY-MM-DD-SLOT-medicationId (e.g., 2026-01-18-EVENING-tacrolimus-cyclosporine)
+        if (isPastDue) {
+          const parts = id.split('-');
+          // First 3 parts are date (YYYY-MM-DD), 4th is slot, rest is medicationId
+          const slot = parts[3];
+          const medicationId = parts.slice(4).join('-');
+          body = JSON.stringify({ medicationId, slot });
+        } else {
+          body = JSON.stringify({ id });
+        }
+
         const res = await fetch(`${API_BASE}/api/pending`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ id })
+          body
         });
         const data = await res.json();
 
         if (data.confirmed) {
           loadPending();
+          // Also reload confirmation history to update the schedule display
+          await loadConfirmationHistory(selectedDate);
+          loadScheduleForDate(selectedDate);
         } else {
           alert(`⚠️ ${data.message || 'Could not confirm'}`);
         }
