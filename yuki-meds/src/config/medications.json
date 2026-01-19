@@ -1,0 +1,137 @@
+{
+  "surgeryDate": "2026-01-12T12:00:00-08:00",
+  "timeSlots": {
+    "MORNING": "08:30",
+    "LATE_MORNING": "11:00",
+    "MIDDAY": "14:00",
+    "EVENING": "19:00",
+    "LATE_NIGHT": "22:30",
+    "NIGHT": "00:00"
+  },
+  "frequencySlots": {
+    "4x_daily": ["MORNING", "MIDDAY", "EVENING", "LATE_NIGHT"],
+    "2x_daily": ["MORNING", "EVENING"],
+    "1x_daily": ["MORNING"],
+    "12h": ["MORNING", "EVENING"],
+    "12h_11": ["LATE_MORNING", "LATE_NIGHT"]
+  },
+  "medications": {
+    "leftEye": [
+      {
+        "id": "ofloxacin",
+        "name": "Ofloxacin 0.3%",
+        "dose": "1 drop",
+        "frequency": "4x_daily",
+        "location": "LEFT eye",
+        "notes": null,
+        "startDate": "2026-01-12T12:00:00-08:00",
+        "endDate": null,
+        "active": true
+      },
+      {
+        "id": "atropine",
+        "name": "Atropine 1%",
+        "dose": "1 drop",
+        "frequency": "tapering",
+        "location": "LEFT eye",
+        "notes": "⚠️ May cause drooling",
+        "startDate": "2026-01-12T12:00:00-08:00",
+        "endDate": null,
+        "active": true,
+        "tapering": {
+          "day1": ["MORNING", "MIDDAY", "EVENING"],
+          "day2": ["MORNING", "EVENING"],
+          "day3plus": ["MORNING"]
+        }
+      },
+      {
+        "id": "amniotic",
+        "name": "Amniotic eye drops",
+        "dose": "1 drop",
+        "frequency": "2x_daily",
+        "location": "LEFT eye",
+        "notes": "❄️ Refrigerated",
+        "startDate": "2026-01-12T12:00:00-08:00",
+        "endDate": null,
+        "active": true
+      },
+      {
+        "id": "plasma",
+        "name": "Homologous plasma",
+        "dose": "1 drop",
+        "frequency": "4x_daily",
+        "location": "LEFT eye",
+        "notes": "❄️ Refrigerated",
+        "startDate": "2026-01-12T12:00:00-08:00",
+        "endDate": null,
+        "active": true
+      }
+    ],
+    "rightEye": [
+      {
+        "id": "prednisolone-eye",
+        "name": "Prednisolone acetate 1%",
+        "dose": "1 drop",
+        "frequency": "2x_daily",
+        "location": "RIGHT eye",
+        "notes": "🛑 If squinting, STOP & call vet (650-551-1115)",
+        "startDate": "2026-01-12T12:00:00-08:00",
+        "endDate": null,
+        "active": true
+      },
+      {
+        "id": "tacrolimus-cyclosporine",
+        "name": "Tacrolimus 0.03% + Cyclosporine 2%",
+        "dose": "1 drop",
+        "frequency": "2x_daily",
+        "location": "RIGHT eye",
+        "notes": "🧤 Wash hands after. 🔁 Lifelong med",
+        "startDate": "2026-01-12T12:00:00-08:00",
+        "endDate": null,
+        "active": true
+      }
+    ],
+    "oral": [
+      {
+        "id": "prednisolone-oral",
+        "name": "Prednisolone 5mg tablet",
+        "dose": "½ tablet",
+        "frequency": "1x_daily",
+        "location": "ORAL",
+        "notes": "⚠️ Do NOT stop abruptly. May increase hunger/thirst/urination",
+        "startDate": "2026-01-15T12:00:00-08:00",
+        "endDate": null,
+        "active": true
+      },
+      {
+        "id": "amoxicillin",
+        "name": "Amoxicillin/Clavulanate liquid",
+        "dose": "1 mL",
+        "frequency": "12h",
+        "location": "ORAL",
+        "notes": "🍽️ Give with food. ❄️ Refrigerate",
+        "startDate": "2026-01-13T12:00:00-08:00",
+        "endDate": null,
+        "active": true
+      },
+      {
+        "id": "gabapentin",
+        "name": "Gabapentin 50mg",
+        "dose": "1 tablet",
+        "frequency": "12h_11",
+        "location": "ORAL",
+        "notes": "💊 For pain. May cause sedation",
+        "startDate": "2026-01-12T12:00:00-08:00",
+        "endDate": null,
+        "active": true
+      }
+    ]
+  },
+  "medicationDependencies": {
+    "spacingMinutes": 5,
+    "conflictGroups": {
+      "leftEye": ["ofloxacin", "atropine", "amniotic", "plasma"],
+      "rightEye": ["prednisolone-eye", "tacrolimus-cyclosporine"]
+    }
+  }
+}
