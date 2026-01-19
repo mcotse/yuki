@@ -404,7 +404,7 @@ export async function getPastDueMedications(date = new Date()) {
 
 // Get past due medications that haven't been confirmed (async - checks confirmation status)
 export async function getPastDueUnconfirmed(date = new Date()) {
-  const pastDue = getPastDueMedications(date);
+  const pastDue = await getPastDueMedications(date);
   const unconfirmed = [];
 
   for (const med of pastDue) {

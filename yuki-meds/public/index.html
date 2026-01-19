@@ -2660,6 +2660,12 @@
         loadSchedule();
       } catch (err) {
         console.error('Error loading pending:', err);
+        const statusBar = document.getElementById('pending-status');
+        statusBar.className = 'status-bar';
+        statusBar.innerHTML = `
+          <span>⚠️ Failed to load</span>
+          <button class="refresh-btn" onclick="loadPending()">Retry</button>
+        `;
         document.getElementById('pending-list').innerHTML = `
           <li class="empty-state">
             <div class="icon">⚠️</div>
