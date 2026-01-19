@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     date.setDate(date.getDate() + day - 1);
   }
 
-  const schedule = getDaySchedule(date);
+  const schedule = await getDaySchedule(date);
   const dayNumber = getDayNumber(date);
 
   return res.status(200).json({

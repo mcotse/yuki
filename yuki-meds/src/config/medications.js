@@ -1,173 +1,184 @@
 // Yuki's medication schedule after corneal laceration repair
 // Surgery date: January 12, 2026
+//
+// Now loading from medications.json for easier editing
 
-// Use noon PST to avoid timezone issues
-export const SURGERY_DATE = new Date('2026-01-12T12:00:00-08:00');
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-// Time slots for medication reminders (in 24h format)
-export const TIME_SLOTS = {
-  MORNING: '08:30',
-  LATE_MORNING: '11:00',
-  MIDDAY: '14:00',
-  EVENING: '19:00',
-  LATE_NIGHT: '22:30',  // Changed from 23:00 to 22:30 for earlier evening eye drops
-  NIGHT: '00:00'
-};
+// Get current file directory (needed for ES modules)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-// Frequency mapping to time slots
-export const FREQUENCY_SLOTS = {
-  '4x_daily': ['MORNING', 'MIDDAY', 'EVENING', 'LATE_NIGHT'],  // Changed NIGHT to LATE_NIGHT (10:30 PM)
-  '2x_daily': ['MORNING', 'EVENING'],
-  '1x_daily': ['MORNING'],
-  '12h': ['MORNING', 'EVENING'],
-  '12h_11': ['LATE_MORNING', 'LATE_NIGHT']  // 11 AM and 10:30 PM
-};
+// Cache for loaded config
+let medicationConfig = null;
 
-export const medications = {
-  // ===== LEFT EYE (post-surgery) =====
-  // ORDER: Least viscous to most viscous for optimal absorption
-  // 1. Aqueous solutions first (ofloxacin, atropine)
-  // 2. Viscous biological preparations last (amniotic, plasma)
-  // Wait 3-5 minutes between each drop
-  leftEye: [
-    {
-      id: 'ofloxacin',
-      name: 'Ofloxacin 0.3%',
-      dose: '1 drop',
-      frequency: '4x_daily',
-      location: 'LEFT eye',
-      notes: null,
-      startDate: SURGERY_DATE,
-      endDate: null, // until recheck
-      active: true
-    },
-    {
-      id: 'atropine',
-      name: 'Atropine 1%',
-      dose: '1 drop',
-      frequency: 'tapering', // special handling
-      location: 'LEFT eye',
-      notes: '⚠️ May cause drooling',
-      startDate: SURGERY_DATE,
-      endDate: null,
-      active: true,
-      tapering: {
-        // Day 1: 3x daily (morning, midday, evening)
-        // Day 2: 2x daily (morning, evening)
-        // Day 3+: 1x daily (morning)
-        day1: ['MORNING', 'MIDDAY', 'EVENING'],
-        day2: ['MORNING', 'EVENING'],
-        day3plus: ['MORNING']
-      }
-    },
-    {
-      id: 'amniotic',
-      name: 'Amniotic eye drops',
-      dose: '1 drop',
-      frequency: '2x_daily',
-      location: 'LEFT eye',
-      notes: '❄️ Refrigerated',
-      startDate: SURGERY_DATE,
-      endDate: null,
-      active: true
-    },
-    {
-      id: 'plasma',
-      name: 'Homologous plasma',
-      dose: '1 drop',
-      frequency: '4x_daily',
-      location: 'LEFT eye',
-      notes: '❄️ Refrigerated',
-      startDate: SURGERY_DATE,
-      endDate: null,
-      active: true
-    }
-  ],
-
-  // ===== RIGHT EYE (chronic/long-term) =====
-  // ORDER: Suspension before oily preparation for optimal absorption
-  // 1. Prednisolone acetate (suspension - shake well)
-  // 2. Tacrolimus/Cyclosporine (oily, most viscous)
-  rightEye: [
-    {
-      id: 'prednisolone-eye',
-      name: 'Prednisolone acetate 1%',
-      dose: '1 drop',
-      frequency: '2x_daily',
-      location: 'RIGHT eye',
-      notes: '🛑 If squinting, STOP & call vet (650-551-1115)',
-      startDate: SURGERY_DATE,
-      endDate: null, // lifelong for this condition
-      active: true
-    },
-    {
-      id: 'tacrolimus-cyclosporine',
-      name: 'Tacrolimus 0.03% + Cyclosporine 2%',
-      dose: '1 drop',
-      frequency: '2x_daily',
-      location: 'RIGHT eye',
-      notes: '🧤 Wash hands after. 🔁 Lifelong med',
-      startDate: SURGERY_DATE,
-      endDate: null,
-      active: true
-    }
-  ],
-
-  // ===== ORAL MEDICATIONS =====
-  oral: [
-    {
-      id: 'prednisolone-oral',
-      name: 'Prednisolone 5mg tablet',
-      dose: '½ tablet',
-      frequency: '1x_daily',
-      location: 'ORAL',
-      notes: '⚠️ Do NOT stop abruptly. May increase hunger/thirst/urination',
-      startDate: new Date('2026-01-15T12:00:00-08:00'), // Wednesday
-      endDate: null,
-      active: true
-    },
-    {
-      id: 'amoxicillin',
-      name: 'Amoxicillin/Clavulanate liquid',
-      dose: '1 mL',
-      frequency: '12h',
-      location: 'ORAL',
-      notes: '🍽️ Give with food. ❄️ Refrigerate',
-      startDate: new Date('2026-01-13T12:00:00-08:00'), // tomorrow
-      endDate: null, // continue until finished
-      active: true
-    },
-    {
-      id: 'gabapentin',
-      name: 'Gabapentin 50mg',
-      dose: '1 tablet',
-      frequency: '12h_11',
-      location: 'ORAL',
-      notes: '💊 For pain. May cause sedation',
-      startDate: SURGERY_DATE,
-      endDate: null,
-      active: true
-    }
-  ]
-};
-
-// Medication dependencies - eye drops on same eye need 5 minute spacing
-// This allows each drop to absorb before applying the next
-export const MEDICATION_DEPENDENCIES = {
-  // Spacing in minutes required between conflicting medications
-  spacingMinutes: 5,
-
-  // Groups of medications that conflict with each other (same eye)
-  // Order reflects application sequence: least viscous to most viscous
-  conflictGroups: {
-    leftEye: ['ofloxacin', 'atropine', 'amniotic', 'plasma'],
-    rightEye: ['prednisolone-eye', 'tacrolimus-cyclosporine']
+/**
+ * Load and parse medication configuration from JSON file
+ * @returns {Object} Parsed medication configuration
+ */
+function loadMedicationConfig() {
+  if (medicationConfig) {
+    return medicationConfig;
   }
-};
 
-// Get medications that conflict with a given medication
+  try {
+    const configPath = join(__dirname, 'medications.json');
+    const configData = readFileSync(configPath, 'utf-8');
+    const config = JSON.parse(configData);
+
+    // Validate the configuration
+    validateMedicationConfig(config);
+
+    // Convert date strings to Date objects
+    config.surgeryDateObj = new Date(config.surgeryDate);
+
+    // Convert medication dates to Date objects
+    for (const category of ['leftEye', 'rightEye', 'oral']) {
+      for (const med of config.medications[category]) {
+        if (med.startDate) {
+          med.startDate = new Date(med.startDate);
+        }
+        if (med.endDate) {
+          med.endDate = new Date(med.endDate);
+        }
+      }
+    }
+
+    medicationConfig = config;
+    return config;
+  } catch (error) {
+    console.error('Failed to load medication configuration:', error.message);
+    throw new Error(`Medication config error: ${error.message}`);
+  }
+}
+
+/**
+ * Validate medication configuration structure and values
+ * @param {Object} config - Configuration object to validate
+ * @throws {Error} If configuration is invalid
+ */
+function validateMedicationConfig(config) {
+  // Check required fields
+  if (!config.surgeryDate) {
+    throw new Error('surgeryDate is required');
+  }
+  if (!config.timeSlots) {
+    throw new Error('timeSlots is required');
+  }
+  if (!config.frequencySlots) {
+    throw new Error('frequencySlots is required');
+  }
+  if (!config.medications) {
+    throw new Error('medications is required');
+  }
+
+  // Validate surgery date is parseable
+  const surgeryDate = new Date(config.surgeryDate);
+  if (isNaN(surgeryDate.getTime())) {
+    throw new Error(`Invalid surgeryDate: ${config.surgeryDate}`);
+  }
+
+  // Validate time slots format (HH:MM)
+  for (const [slot, time] of Object.entries(config.timeSlots)) {
+    if (!/^\d{2}:\d{2}$/.test(time)) {
+      throw new Error(`Invalid time format for ${slot}: ${time} (expected HH:MM)`);
+    }
+  }
+
+  // Validate frequency slots reference valid time slots
+  const validSlots = Object.keys(config.timeSlots);
+  for (const [freq, slots] of Object.entries(config.frequencySlots)) {
+    if (!Array.isArray(slots)) {
+      throw new Error(`Frequency ${freq} slots must be an array`);
+    }
+    for (const slot of slots) {
+      if (!validSlots.includes(slot)) {
+        throw new Error(`Invalid slot '${slot}' in frequency '${freq}' (valid: ${validSlots.join(', ')})`);
+      }
+    }
+  }
+
+  // Validate medications
+  const validFrequencies = [...Object.keys(config.frequencySlots), 'tapering'];
+  for (const category of ['leftEye', 'rightEye', 'oral']) {
+    if (!config.medications[category]) {
+      throw new Error(`medications.${category} is required`);
+    }
+    if (!Array.isArray(config.medications[category])) {
+      throw new Error(`medications.${category} must be an array`);
+    }
+
+    for (const med of config.medications[category]) {
+      // Required fields
+      if (!med.id) throw new Error(`Medication missing 'id' field`);
+      if (!med.name) throw new Error(`Medication ${med.id} missing 'name' field`);
+      if (!med.frequency) throw new Error(`Medication ${med.id} missing 'frequency' field`);
+
+      // Validate frequency
+      if (!validFrequencies.includes(med.frequency)) {
+        throw new Error(`Invalid frequency '${med.frequency}' for ${med.id} (valid: ${validFrequencies.join(', ')})`);
+      }
+
+      // Validate startDate if present
+      if (med.startDate) {
+        const startDate = new Date(med.startDate);
+        if (isNaN(startDate.getTime())) {
+          throw new Error(`Invalid startDate for ${med.id}: ${med.startDate}`);
+        }
+      }
+
+      // Validate endDate if present
+      if (med.endDate) {
+        const endDate = new Date(med.endDate);
+        if (isNaN(endDate.getTime())) {
+          throw new Error(`Invalid endDate for ${med.id}: ${med.endDate}`);
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
+// ===== EXPORTED VALUES =====
+
+export const SURGERY_DATE = (() => {
+  const config = loadMedicationConfig();
+  return config.surgeryDateObj;
+})();
+
+export const TIME_SLOTS = (() => {
+  const config = loadMedicationConfig();
+  return config.timeSlots;
+})();
+
+export const FREQUENCY_SLOTS = (() => {
+  const config = loadMedicationConfig();
+  return config.frequencySlots;
+})();
+
+export const medications = (() => {
+  const config = loadMedicationConfig();
+  return config.medications;
+})();
+
+export const MEDICATION_DEPENDENCIES = (() => {
+  const config = loadMedicationConfig();
+  return config.medicationDependencies;
+})();
+
+// ===== HELPER FUNCTIONS =====
+
+/**
+ * Get medications that conflict with a given medication (same eye)
+ * @param {string} medicationId - Medication ID to check
+ * @returns {string[]} Array of conflicting medication IDs
+ */
 export function getConflictingMeds(medicationId) {
-  for (const [group, meds] of Object.entries(MEDICATION_DEPENDENCIES.conflictGroups)) {
+  const deps = MEDICATION_DEPENDENCIES;
+  for (const [group, meds] of Object.entries(deps.conflictGroups)) {
     if (meds.includes(medicationId)) {
       // Return all other meds in the same group
       return meds.filter(m => m !== medicationId);
@@ -176,7 +187,10 @@ export function getConflictingMeds(medicationId) {
   return [];
 }
 
-// Helper to get all medications as flat array
+/**
+ * Get all medications as a flat array
+ * @returns {Object[]} Array of all medication objects
+ */
 export function getAllMedications() {
   return [
     ...medications.leftEye,
@@ -185,12 +199,16 @@ export function getAllMedications() {
   ];
 }
 
-// Get day number since surgery (1-indexed)
+/**
+ * Get day number since surgery (1-indexed)
+ * @param {Date} date - Date to check (defaults to today)
+ * @returns {number} Day number (1 = surgery day)
+ */
 export function getDayNumber(date = new Date()) {
   // Normalize both dates to just their date components in local time
-  const surgeryYear = 2026;
-  const surgeryMonth = 0; // January
-  const surgeryDay = 12;
+  const surgeryYear = SURGERY_DATE.getFullYear();
+  const surgeryMonth = SURGERY_DATE.getMonth();
+  const surgeryDay = SURGERY_DATE.getDate();
 
   const checkDate = new Date(date);
   const checkYear = checkDate.getFullYear();
@@ -207,12 +225,29 @@ export function getDayNumber(date = new Date()) {
   return diffDays + 1; // Day 1 is surgery day
 }
 
-// Get Atropine schedule for current day
+/**
+ * Get Atropine schedule for current day (tapering)
+ * @param {Date} date - Date to check (defaults to today)
+ * @returns {string[]} Array of time slot names for Atropine
+ */
 export function getAtropineSlots(date = new Date()) {
   const dayNum = getDayNumber(date);
   const atropine = medications.leftEye.find(m => m.id === 'atropine');
 
+  if (!atropine || !atropine.tapering) {
+    return [];
+  }
+
   if (dayNum === 1) return atropine.tapering.day1;
   if (dayNum === 2) return atropine.tapering.day2;
   return atropine.tapering.day3plus;
+}
+
+/**
+ * Reload configuration from disk (clears cache)
+ * Useful for development or when JSON file is updated
+ */
+export function reloadConfig() {
+  medicationConfig = null;
+  return loadMedicationConfig();
 }

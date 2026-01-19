@@ -27,7 +27,7 @@ async function sendTestMessage() {
 
 async function sendIndividualReminders(slot) {
   const slotUpper = slot.toUpperCase();
-  const meds = getMedicationsForSlot(slotUpper);
+  const meds = await getMedicationsForSlot(slotUpper);
 
   if (meds.length === 0) {
     console.log(`No medications scheduled for ${slot}`);

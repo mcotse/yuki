@@ -92,7 +92,7 @@ export default async function handler(req, res) {
   }
 
   // Get individual reminders for this slot
-  const { reminders, dayNumber } = getIndividualReminders(now);
+  const { reminders, dayNumber } = await getIndividualReminders(now);
 
   if (reminders.length === 0) {
     return res.status(200).json({

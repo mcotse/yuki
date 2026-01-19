@@ -6,10 +6,25 @@ import {
   getDayNumber,
   getAtropineSlots
 } from '../config/medications.js';
-import { isAlreadyConfirmed } from './storage.js';
+import { isAlreadyConfirmed, getMedicationSchedule } from './storage.js';
 
 const TIMEZONE = 'America/Los_Angeles';
 const EYE_DROP_STAGGER_MINUTES = 6;
+
+// Cache custom schedules for 5 minutes to reduce Redis lookups
+const scheduleCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getMedicationScheduleWithCache(medicationId) {
+  const cached = scheduleCache.get(medicationId);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+
+  const schedule = await getMedicationSchedule(medicationId);
+  scheduleCache.set(medicationId, { data: schedule, timestamp: Date.now() });
+  return schedule;
+}
 
 // Convert to local timezone
 function toLocalTime(date) {
@@ -55,32 +70,46 @@ function toDateOnly(d) {
 }
 
 // Check if medication is due at given slot
-export function isMedicationDue(med, slot, date = new Date()) {
+export async function isMedicationDue(med, slot, date = new Date()) {
+  // Get custom schedule from Redis (if exists)
+  const customSchedule = await getMedicationScheduleWithCache(med.id);
+
+  // Merge: custom schedule overrides default
+  const effectiveSchedule = {
+    ...med,  // Default from medications.js
+    ...(customSchedule || {})  // Custom from Redis (if exists)
+  };
+
+  // Check if inactive (custom schedules can disable medications)
+  if (effectiveSchedule.active === false) {
+    return false;
+  }
+
   const checkDate = toDateOnly(date);
 
   // Check if medication has started (compare dates only)
-  if (med.startDate && toDateOnly(med.startDate) > checkDate) {
+  if (effectiveSchedule.startDate && toDateOnly(effectiveSchedule.startDate) > checkDate) {
     return false;
   }
 
   // Check if medication has ended (compare dates only)
-  if (med.endDate && toDateOnly(med.endDate) < checkDate) {
+  if (effectiveSchedule.endDate && toDateOnly(effectiveSchedule.endDate) < checkDate) {
     return false;
   }
 
   // Skip as-needed medications in regular reminders
-  if (med.asNeeded) {
+  if (effectiveSchedule.asNeeded) {
     return false;
   }
 
   // Special handling for Atropine tapering
-  if (med.id === 'atropine') {
+  if (effectiveSchedule.id === 'atropine') {
     const atropineSlots = getAtropineSlots(date);
     return atropineSlots.includes(slot);
   }
 
-  // Check regular frequency
-  const slots = FREQUENCY_SLOTS[med.frequency];
+  // Check regular frequency (use effective frequency - custom or default)
+  const slots = FREQUENCY_SLOTS[effectiveSchedule.frequency];
   if (!slots) return false;
 
   return slots.includes(slot);
@@ -114,12 +143,21 @@ function getStaggeredTime(slotName, staggerIndex) {
 }
 
 // Generate individual medication reminders with staggered times
-export function getIndividualReminders(date = new Date()) {
+export async function getIndividualReminders(date = new Date()) {
   const slot = getCurrentTimeSlot(date);
   if (!slot) return { slot: null, reminders: [] };
 
   const allMeds = getAllMedications();
-  const dueMeds = allMeds.filter(med => med.active && isMedicationDue(med, slot, date));
+
+  // Filter medications that are due (async)
+  const dueChecks = await Promise.all(
+    allMeds.map(async (med) => ({
+      med,
+      isDue: med.active && await isMedicationDue(med, slot, date)
+    }))
+  );
+  const dueMeds = dueChecks.filter(result => result.isDue).map(result => result.med);
+
   const dayNumber = getDayNumber(date);
   const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD for deterministic IDs
 
@@ -203,12 +241,20 @@ function formatIndividualMessage(med, timeStr, dayNumber) {
 }
 
 // Get all medications due at current time (legacy - for combined message)
-export function getMedicationsDue(date = new Date()) {
+export async function getMedicationsDue(date = new Date()) {
   const slot = getCurrentTimeSlot(date);
   if (!slot) return { slot: null, medications: [] };
 
   const allMeds = getAllMedications();
-  const dueMeds = allMeds.filter(med => med.active && isMedicationDue(med, slot, date));
+
+  // Filter medications that are due (async)
+  const dueChecks = await Promise.all(
+    allMeds.map(async (med) => ({
+      med,
+      isDue: med.active && await isMedicationDue(med, slot, date)
+    }))
+  );
+  const dueMeds = dueChecks.filter(result => result.isDue).map(result => result.med);
 
   return {
     slot,
@@ -262,18 +308,27 @@ export function formatSmsMessage(dueInfo) {
 }
 
 // Get medications for a specific slot (for testing/preview)
-export function getMedicationsForSlot(slot, date = new Date()) {
+export async function getMedicationsForSlot(slot, date = new Date()) {
   const allMeds = getAllMedications();
-  return allMeds.filter(med => med.active && isMedicationDue(med, slot, date));
+
+  // Filter medications that are due (async)
+  const dueChecks = await Promise.all(
+    allMeds.map(async (med) => ({
+      med,
+      isDue: med.active && await isMedicationDue(med, slot, date)
+    }))
+  );
+
+  return dueChecks.filter(result => result.isDue).map(result => result.med);
 }
 
 // Preview full day schedule
-export function getDaySchedule(date = new Date()) {
+export async function getDaySchedule(date = new Date()) {
   const slots = ['MORNING', 'LATE_MORNING', 'MIDDAY', 'EVENING', 'LATE_NIGHT', 'NIGHT'];
   const schedule = {};
 
   for (const slot of slots) {
-    const meds = getMedicationsForSlot(slot, date);
+    const meds = await getMedicationsForSlot(slot, date);
     // Only include slots that have medications
     if (meds.length > 0) {
       schedule[slot] = {
@@ -313,7 +368,7 @@ export function getPastTimeSlots(date = new Date()) {
 
 // Get medications that are past due and not confirmed
 // This includes medications from past time slots that haven't been confirmed
-export function getPastDueMedications(date = new Date()) {
+export async function getPastDueMedications(date = new Date()) {
   const pastSlots = getPastTimeSlots(date);
   const allMeds = getAllMedications();
   const dayNumber = getDayNumber(date);
@@ -322,7 +377,14 @@ export function getPastDueMedications(date = new Date()) {
   const pastDue = [];
 
   for (const slot of pastSlots) {
-    const dueMeds = allMeds.filter(med => med.active && isMedicationDue(med, slot, date));
+    // Filter medications that are due (async)
+    const dueChecks = await Promise.all(
+      allMeds.map(async (med) => ({
+        med,
+        isDue: med.active && await isMedicationDue(med, slot, date)
+      }))
+    );
+    const dueMeds = dueChecks.filter(result => result.isDue).map(result => result.med);
 
     for (const med of dueMeds) {
       pastDue.push({

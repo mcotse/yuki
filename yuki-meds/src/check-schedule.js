@@ -7,8 +7,8 @@ import { TIME_SLOTS, getDayNumber } from './config/medications.js';
 const args = process.argv.slice(2);
 const command = args[0];
 
-function printDaySchedule(date = new Date()) {
-  const schedule = getDaySchedule(date);
+async function printDaySchedule(date = new Date()) {
+  const schedule = await getDaySchedule(date);
 
   console.log(`\n📅 Yuki's Medication Schedule - Day ${schedule.dayNumber}`);
   console.log(`   ${schedule.date}\n`);
@@ -53,7 +53,7 @@ function printDaySchedule(date = new Date()) {
   console.log('\n' + '═'.repeat(50) + '\n');
 }
 
-function printSmsPreview(slot) {
+async function printSmsPreview(slot) {
   const now = new Date();
   const slotTimes = {
     MORNING: [8, 30],
@@ -75,7 +75,7 @@ function printSmsPreview(slot) {
   };
 
   // Get meds for that slot
-  const schedule = getDaySchedule(now);
+  const schedule = await getDaySchedule(now);
   dueInfo.medications = schedule.schedule[dueInfo.slot]?.medications || [];
 
   const msg = formatSmsMessage(dueInfo);
@@ -110,53 +110,55 @@ Examples:
 }
 
 // Main
-switch (command) {
-  case 'help':
-  case '--help':
-  case '-h':
-    printHelp();
-    break;
+(async () => {
+  switch (command) {
+    case 'help':
+    case '--help':
+    case '-h':
+      printHelp();
+      break;
 
-  case 'tomorrow': {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    printDaySchedule(tomorrow);
-    break;
-  }
-
-  case 'day': {
-    const dayNum = parseInt(args[1], 10);
-    if (isNaN(dayNum) || dayNum < 1) {
-      console.error('Please specify a valid day number (e.g., "day 3")');
-      process.exit(1);
+    case 'tomorrow': {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      await printDaySchedule(tomorrow);
+      break;
     }
-    // Use noon to avoid timezone issues
-    const date = new Date('2026-01-12T12:00:00-08:00');
-    date.setDate(date.getDate() + dayNum - 1);
-    printDaySchedule(date);
-    break;
-  }
 
-  case 'sms':
-    printSmsPreview(args[1] || 'morning');
-    break;
-
-  case 'now': {
-    const dueInfo = getMedicationsDue();
-    if (!dueInfo.slot) {
-      console.log('\n⏰ No medication slot active right now.');
-      console.log('   Next slots: 8:30 AM, 2:00 PM, 7:00 PM, 12:00 AM\n');
-    } else {
-      console.log(`\n⏰ Current slot: ${dueInfo.slot} (${dueInfo.slotTime})`);
-      console.log(`   Day ${dueInfo.dayNumber} since surgery\n`);
-      const msg = formatSmsMessage(dueInfo);
-      console.log(msg);
+    case 'day': {
+      const dayNum = parseInt(args[1], 10);
+      if (isNaN(dayNum) || dayNum < 1) {
+        console.error('Please specify a valid day number (e.g., "day 3")');
+        process.exit(1);
+      }
+      // Use noon to avoid timezone issues
+      const date = new Date('2026-01-12T12:00:00-08:00');
+      date.setDate(date.getDate() + dayNum - 1);
+      await printDaySchedule(date);
+      break;
     }
-    break;
-  }
 
-  case 'today':
-  default:
-    printDaySchedule();
-    break;
-}
+    case 'sms':
+      await printSmsPreview(args[1] || 'morning');
+      break;
+
+    case 'now': {
+      const dueInfo = await getMedicationsDue();
+      if (!dueInfo.slot) {
+        console.log('\n⏰ No medication slot active right now.');
+        console.log('   Next slots: 8:30 AM, 2:00 PM, 7:00 PM, 12:00 AM\n');
+      } else {
+        console.log(`\n⏰ Current slot: ${dueInfo.slot} (${dueInfo.slotTime})`);
+        console.log(`   Day ${dueInfo.dayNumber} since surgery\n`);
+        const msg = formatSmsMessage(dueInfo);
+        console.log(msg);
+      }
+      break;
+    }
+
+    case 'today':
+    default:
+      await printDaySchedule();
+      break;
+  }
+})();
