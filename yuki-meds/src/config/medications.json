@@ -41,7 +41,7 @@
         "tapering": {
           "day1": ["MORNING", "MIDDAY", "EVENING"],
           "day2": ["MORNING", "EVENING"],
-          "day3plus": ["MORNING"]
+          "day3plus": ["MORNING", "EVENING"]
         }
       },
       {
@@ -63,8 +63,8 @@
         "location": "LEFT eye",
         "notes": "❄️ Refrigerated",
         "startDate": "2026-01-12T12:00:00-08:00",
-        "endDate": null,
-        "active": true
+        "endDate": "2026-01-19T12:00:00-08:00",
+        "active": false
       }
     ],
     "rightEye": [
@@ -95,7 +95,7 @@
       {
         "id": "prednisolone-oral",
         "name": "Prednisolone 5mg tablet",
-        "dose": "½ tablet",
+        "dose": "¼ tablet",
         "frequency": "1x_daily",
         "location": "ORAL",
         "notes": "⚠️ Do NOT stop abruptly. May increase hunger/thirst/urination",
@@ -111,8 +111,8 @@
         "location": "ORAL",
         "notes": "🍽️ Give with food. ❄️ Refrigerate",
         "startDate": "2026-01-13T12:00:00-08:00",
-        "endDate": null,
-        "active": true
+        "endDate": "2026-01-19T12:00:00-08:00",
+        "active": false
       },
       {
         "id": "gabapentin",
