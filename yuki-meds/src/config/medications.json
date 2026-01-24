@@ -66,17 +66,6 @@
         "startDate": "2026-01-12T12:00:00-08:00",
         "endDate": "2026-01-19T12:00:00-08:00",
         "active": false
-      },
-      {
-        "id": "prednisolone-eye-left",
-        "name": "Prednisolone acetate 1%",
-        "dose": "1 drop",
-        "frequency": "3x_daily",
-        "location": "LEFT eye",
-        "notes": "🛑 If squinting, STOP & call vet (650-551-1115)",
-        "startDate": "2026-01-23T12:00:00-08:00",
-        "endDate": null,
-        "active": true
       }
     ],
     "rightEye": [
@@ -142,7 +131,7 @@
   "medicationDependencies": {
     "spacingMinutes": 5,
     "conflictGroups": {
-      "leftEye": ["ofloxacin", "atropine", "amniotic", "plasma", "prednisolone-eye-left"],
+      "leftEye": ["ofloxacin", "atropine", "amniotic", "plasma"],
       "rightEye": ["prednisolone-eye", "tacrolimus-cyclosporine"]
     }
   }
